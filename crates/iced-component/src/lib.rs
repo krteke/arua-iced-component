@@ -2,4 +2,7 @@
 
 pub mod motion;
 
-pub use motion::{MotionPreferences, MotionPreferencesController};
+pub use motion::{
+    Duration, Easing, MotionPreferences, MotionPreferencesController, MotionSpeed, MotionTokens,
+    MotionTransition, Timing,
+};
