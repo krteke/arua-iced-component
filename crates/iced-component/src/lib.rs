@@ -14,6 +14,6 @@ pub use motion::{
 };
 pub use theme::{
     Color, ElevationTokens, FontStyle, FontWeight, Length, LengthUnit, LineHeight, PaletteTokens,
-    Radius, Rgb, Rgba, ShadowLayer, ShapeTokens, ThemeBuildError, ThemePack, set_theme_pack,
-    with_theme_pack,
+    Radius, Rgb, Rgba, ShadowLayer, ShapeTokens, SurfaceRole, SurfaceStyleTokens, ThemeBuildError,
+    ThemePack, set_theme_pack, with_theme_pack,
 };

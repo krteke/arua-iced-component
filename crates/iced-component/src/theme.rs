@@ -1,5 +1,7 @@
 //! Theme token value types reused from `spectrum-theme`.
 
+mod surface;
+
 use core::convert::Infallible;
 use std::cell::RefCell;
 
@@ -12,6 +14,7 @@ pub use spectrum_theme::{
     Length, LengthParseError, LengthUnit, LineHeight, LineHeightParseError, Radius,
     RadiusParseError, Rgb, Rgba, ShadowError, ShadowLayer, ThemeBuildError,
 };
+pub use surface::{SurfaceRole, SurfaceStyleTokens};
 
 define_theme_tokens! {
     pub struct ThemePack {
