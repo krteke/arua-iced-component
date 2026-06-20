@@ -1,0 +1,67 @@
+[meta]
+name = "Aura Adwaita Light"
+mode = "light"
+author = "Aura Iced Component"
+version = "0.1.0"
+description = "Muted Adwaita-like baseline for Aura Iced components."
+
+[colors]
+"app.bg" = "#f6f5f4"
+"app.fg" = "#241f31"
+"app.fg_muted" = "#5e5c64"
+
+"surface.base.bg" = "#ffffff"
+"surface.base.fg" = "{app.fg}"
+"surface.base.border" = "#0000001f"
+
+"surface.raised.bg" = "#fafafa"
+"surface.raised.fg" = "{app.fg}"
+"surface.raised.border" = "{surface.base.border}"
+
+"button.standard.bg" = "{surface.raised.bg}"
+"button.standard.fg" = "{app.fg}"
+"button.standard.border" = "{surface.base.border}"
+"button.standard.hover.bg" = "#f1f1f1"
+"button.standard.pressed.bg" = "#e9e9e9"
+"button.standard.disabled.bg" = "{app.bg}"
+"button.standard.disabled.fg" = "#5e5c6499"
+"button.standard.focus.ring" = "#1c71d8"
+
+"button.primary.bg" = "#3584e4"
+"button.primary.fg" = "#ffffff"
+"button.primary.border" = "{button.primary.bg}"
+"button.primary.hover.bg" = "{button.standard.focus.ring}"
+"button.primary.pressed.bg" = "#1a5fb4"
+"button.primary.disabled.bg" = "#d7d7d7"
+"button.primary.disabled.fg" = "{button.standard.disabled.fg}"
+"button.primary.focus.ring" = "{button.standard.focus.ring}"
+
+[radii]
+"surface.base.radius" = "8px"
+"surface.raised.radius" = "{surface.base.radius}"
+"button.standard.radius" = "6px"
+"button.primary.radius" = "{button.standard.radius}"
+
+[[shadows]]
+path = "surface.raised.shadow"
+color = "#00000024"
+offset_x = "0px"
+offset_y = "2px"
+blur = "10px"
+spread = "0px"
+
+[[shadows]]
+path = "button.standard.shadow"
+color = "#00000024"
+offset_x = "0px"
+offset_y = "2px"
+blur = "10px"
+spread = "0px"
+
+[[shadows]]
+path = "button.primary.shadow"
+color = "#00000024"
+offset_x = "0px"
+offset_y = "2px"
+blur = "10px"
+spread = "0px"

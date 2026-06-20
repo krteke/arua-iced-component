@@ -10,6 +10,10 @@ repository.workspace = true
 [dependencies]
 aura-anim-core.workspace = true
 spectrum-theme = { workspace = true, features = ["macros"] }
+spectrum-schema.workspace = true
+spectrum-resolver.workspace = true
+toml.workspace = true
+thiserror.workspace = true
 
 [features]
 

@@ -103,7 +103,11 @@ name = "iced-component"
 version = "0.1.0"
 dependencies = [
  "aura-anim-core",
+ "spectrum-resolver",
+ "spectrum-schema",
  "spectrum-theme",
+ "thiserror",
+ "toml",
 ]
 
 [[package]]

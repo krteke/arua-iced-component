@@ -2,4 +2,4 @@
 
 mod style;
 
-pub use style::{ButtonStyleTokens, ButtonVariant};
+pub use style::{ButtonResolvedStyle, ButtonStyleState, ButtonVariant};

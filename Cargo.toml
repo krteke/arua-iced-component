@@ -12,8 +12,14 @@ repository = "https://github.com/krteke/arua-iced-component"
 
 [workspace.dependencies]
 spectrum-theme = "0.1.0"
+spectrum-schema = "0.1.0"
+spectrum-resolver = "0.1.0"
+
 aura-anim = "0.3.0"
 aura-anim-core = "0.3.0"
+
+toml = "1.1.2"
+thiserror = "2.0.18"
 
 iced-component = { version = "0.1.0", path = "crates/iced-component" }
 
