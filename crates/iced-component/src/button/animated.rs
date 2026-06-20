@@ -1,8 +1,8 @@
 use aura_anim_core::{Animatable, MotionError, MotionRuntime};
 
 use crate::{
-    ComponentContext, ComponentMotion, Easing, MotionSpeed, MotionTransition, Timing,
-    button::ButtonVariant,
+    ButtonResolvedStyle, ButtonStyleState, ComponentContext, ComponentMotion, Easing, MotionSpeed,
+    MotionTransition, Timing, button::ButtonVariant,
 };
 
 /// Animatable visual values for an animated button.
@@ -18,6 +18,23 @@ pub struct ButtonMotion {
     pub border_glow: f32,
     /// Focus ring opacity.
     pub focus_alpha: f32,
+}
+
+/// Read-only button state consumed by rendering code.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct AnimatedButtonSnapshot {
+    /// Button visual variant.
+    pub variant: ButtonVariant,
+    /// Interaction state used to resolve component style.
+    pub style_state: ButtonStyleState,
+    /// Resolved theme style for the current interaction state.
+    pub style: ButtonResolvedStyle,
+    /// Current animated motion values.
+    pub motion: ButtonMotion,
+    /// Whether focus visuals are active.
+    pub focused: bool,
+    /// Whether the button is disabled.
+    pub disabled: bool,
 }
 
 /// Button interaction message handled by [`AnimatedButton`].
@@ -114,10 +131,40 @@ impl AnimatedButton {
             .unwrap_or_else(|| self.target_motion()))
     }
 
+    /// Returns a rendering snapshot without exposing internal state.
+    pub fn snapshot(
+        &self,
+        runtime: &MotionRuntime,
+        context: &ComponentContext,
+    ) -> Result<AnimatedButtonSnapshot, MotionError> {
+        let style_state = self.style_state();
+
+        Ok(AnimatedButtonSnapshot {
+            variant: self.variant,
+            style_state,
+            style: ButtonResolvedStyle::from_component_context(context, self.variant, style_state),
+            motion: self.motion_value(runtime)?,
+            focused: self.flags.contains(ButtonFlags::FOCUSED),
+            disabled: self.flags.contains(ButtonFlags::DISABLED),
+        })
+    }
+
     /// Returns this button visual variant.
     #[must_use]
     pub const fn variant(&self) -> ButtonVariant {
         self.variant
+    }
+
+    fn style_state(&self) -> ButtonStyleState {
+        if self.flags.contains(ButtonFlags::DISABLED) {
+            ButtonStyleState::Disabled
+        } else if self.flags.contains(ButtonFlags::PRESSED) {
+            ButtonStyleState::Pressed
+        } else if self.flags.contains(ButtonFlags::HOVERED) {
+            ButtonStyleState::Hovered
+        } else {
+            ButtonStyleState::Idle
+        }
     }
 
     fn target_motion(&self) -> ButtonMotion {
@@ -216,6 +263,7 @@ impl ButtonMotion {
 #[cfg(test)]
 mod tests {
     use aura_anim_core::{MotionRuntime, timing::Duration};
+    use float_cmp::assert_approx_eq;
 
     use super::{AnimatedButton, ButtonInteraction, ButtonMotion};
     use crate::{ButtonVariant, ComponentContext};
@@ -257,7 +305,7 @@ mod tests {
 
         assert!(changed);
         assert_eq!(runtime.motion_count(), 1);
-        assert_eq!(button.motion_value(&runtime).unwrap().shadow_y, 1.2);
+        assert_approx_eq!(f32, button.motion_value(&runtime).unwrap().shadow_y, 1.2);
         assert_eq!(button.variant(), ButtonVariant::Primary);
     }
 
@@ -277,7 +325,51 @@ mod tests {
         runtime.tick(Duration::from_millis(120.0));
 
         let motion = button.motion_value(&runtime).unwrap();
-        assert_eq!(motion.scale, 1.0);
-        assert_eq!(motion.bg_alpha, 0.45);
+        assert_approx_eq!(f32, motion.scale, 1.0);
+        assert_approx_eq!(f32, motion.bg_alpha, 0.45);
+    }
+
+    #[test]
+    fn snapshot_combines_style_and_motion() {
+        let mut runtime = MotionRuntime::new();
+        let context = ComponentContext::current();
+        let mut button = AnimatedButton::new(ButtonVariant::Primary);
+
+        button.register(&mut runtime, &context);
+        button
+            .update(ButtonInteraction::PressDown, &mut runtime)
+            .unwrap();
+        runtime.tick(Duration::from_millis(120.0));
+
+        let snapshot = button.snapshot(&runtime, &context).unwrap();
+
+        assert_eq!(snapshot.variant, ButtonVariant::Primary);
+        assert_eq!(snapshot.style_state, crate::ButtonStyleState::Pressed);
+        assert_eq!(
+            snapshot.style.background,
+            context.theme().theme().button.primary.pressed.bg
+        );
+        assert_approx_eq!(f32, snapshot.motion.scale, 0.98);
+    }
+
+    #[test]
+    fn snapshot_reports_focus_and_disabled_flags() {
+        let mut runtime = MotionRuntime::new();
+        let context = ComponentContext::current();
+        let mut button = AnimatedButton::new(ButtonVariant::Standard);
+
+        button
+            .update(ButtonInteraction::Focus, &mut runtime)
+            .unwrap();
+        button
+            .update(ButtonInteraction::SetDisabled(true), &mut runtime)
+            .unwrap();
+
+        let snapshot = button.snapshot(&runtime, &context).unwrap();
+
+        assert!(snapshot.focused);
+        assert!(snapshot.disabled);
+        assert_eq!(snapshot.style_state, crate::ButtonStyleState::Disabled);
+        assert_approx_eq!(f32, snapshot.motion.focus_alpha, 0.5);
     }
 }

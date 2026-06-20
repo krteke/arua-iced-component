@@ -7,8 +7,8 @@ pub mod theme;
 
 pub use aura_anim_core::{Motion, MotionError, MotionRuntime};
 pub use button::{
-    AnimatedButton, ButtonInteraction, ButtonMotion, ButtonResolvedStyle, ButtonStyleState,
-    ButtonVariant,
+    AnimatedButton, AnimatedButtonSnapshot, ButtonInteraction, ButtonMotion, ButtonResolvedStyle,
+    ButtonStyleState, ButtonVariant,
 };
 pub use component::{ComponentContext, ComponentMotion};
 pub use motion::{

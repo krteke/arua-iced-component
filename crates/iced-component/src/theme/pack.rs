@@ -10,6 +10,7 @@ use crate::ThemeLoadError;
 pub const ADWAITA_LIGHT_TOML: &str = include_str!("../../themes/adwaita-light.toml");
 
 define_theme_tokens! {
+    #[derive(Clone)]
     pub struct ThemePack {
         app {
             bg: Color,
@@ -74,75 +75,6 @@ pub type SurfaceRaisedTokens = ThemePackSurfaceRaised;
 pub type ButtonStandardTokens = ThemePackButtonStandard;
 /// Primary button token group generated for [`ThemePack`].
 pub type ButtonPrimaryTokens = ThemePackButtonPrimary;
-
-impl Clone for ThemePack {
-    fn clone(&self) -> Self {
-        Self {
-            app: AppTokens {
-                bg: self.app.bg,
-                fg: self.app.fg,
-                fg_muted: self.app.fg_muted,
-            },
-            surface: ThemePackSurface {
-                base: SurfaceTokens {
-                    bg: self.surface.base.bg,
-                    fg: self.surface.base.fg,
-                    border: self.surface.base.border,
-                    radius: self.surface.base.radius,
-                },
-                raised: SurfaceRaisedTokens {
-                    bg: self.surface.raised.bg,
-                    fg: self.surface.raised.fg,
-                    border: self.surface.raised.border,
-                    radius: self.surface.raised.radius,
-                    shadow: self.surface.raised.shadow,
-                },
-            },
-            button: ThemePackButton {
-                standard: ButtonStandardTokens {
-                    bg: self.button.standard.bg,
-                    fg: self.button.standard.fg,
-                    border: self.button.standard.border,
-                    hover: ThemePackButtonStandardHover {
-                        bg: self.button.standard.hover.bg,
-                    },
-                    pressed: ThemePackButtonStandardPressed {
-                        bg: self.button.standard.pressed.bg,
-                    },
-                    disabled: ThemePackButtonStandardDisabled {
-                        bg: self.button.standard.disabled.bg,
-                        fg: self.button.standard.disabled.fg,
-                    },
-                    focus: ThemePackButtonStandardFocus {
-                        ring: self.button.standard.focus.ring,
-                    },
-                    radius: self.button.standard.radius,
-                    shadow: self.button.standard.shadow,
-                },
-                primary: ButtonPrimaryTokens {
-                    bg: self.button.primary.bg,
-                    fg: self.button.primary.fg,
-                    border: self.button.primary.border,
-                    hover: ThemePackButtonPrimaryHover {
-                        bg: self.button.primary.hover.bg,
-                    },
-                    pressed: ThemePackButtonPrimaryPressed {
-                        bg: self.button.primary.pressed.bg,
-                    },
-                    disabled: ThemePackButtonPrimaryDisabled {
-                        bg: self.button.primary.disabled.bg,
-                        fg: self.button.primary.disabled.fg,
-                    },
-                    focus: ThemePackButtonPrimaryFocus {
-                        ring: self.button.primary.focus.ring,
-                    },
-                    radius: self.button.primary.radius,
-                    shadow: self.button.primary.shadow,
-                },
-            },
-        }
-    }
-}
 
 thread_local! {
     static CURRENT_THEME: RefCell<ThemePack> = RefCell::new(ThemePack::adwaita());

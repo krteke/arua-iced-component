@@ -39,6 +39,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "autocfg"
+version = "1.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f2032f911046de80f0a198e0901378627c33f59ea0ac00e363d481118bd70a53"
+
+[[package]]
 name = "bumpalo"
 version = "3.20.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -55,6 +61,15 @@ name = "equivalent"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
+
+[[package]]
+name = "float-cmp"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b09cf3155332e944990140d967ff5eceb70df778b34f77d8075db46e4704e6d8"
+dependencies = [
+ "num-traits",
+]
 
 [[package]]
 name = "futures-core"
@@ -103,6 +118,7 @@ name = "iced-component"
 version = "0.1.0"
 dependencies = [
  "aura-anim-core",
+ "float-cmp",
  "spectrum-resolver",
  "spectrum-schema",
  "spectrum-theme",
@@ -162,6 +178,15 @@ name = "memchr"
 version = "2.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "88904434abc2901f197fe8cc55f0445e7ded921dba5911dad2e2b39b48e663c4"
+
+[[package]]
+name = "num-traits"
+version = "0.2.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "071dfc062690e90b734c0b2273ce72ad0ffa95f0c74596bc250dcfd960262841"
+dependencies = [
+ "autocfg",
+]
 
 [[package]]
 name = "once_cell"
@@ -261,9 +286,9 @@ checksum = "0c790de23124f9ab44544d7ac05d60440adc586479ce501c1d6d7da3cd8c9cf5"
 
 [[package]]
 name = "spectrum-codegen"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fe08bcea9374e72d379b080a2792bd47bfd7b93ff96702ea4513db0bec5dcd90"
+checksum = "b8f3b68b942516775bc8de9c8f6aafeb8231ffeb41440629987b434005f15c0d"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -277,18 +302,18 @@ dependencies = [
 
 [[package]]
 name = "spectrum-core"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7e91ab8b56cfe3f31c7c8720f171b39569599fc7227b65c63b49aeac2b7d58ba"
+checksum = "83caed9429753a3ccfba58f7479d0cefdd91318db82928705016862439007d30"
 dependencies = [
  "serde",
 ]
 
 [[package]]
 name = "spectrum-palette"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "35619d2512b6a77a4c1a55394b7987b48a612e405af7f81d030a897cf1644c9e"
+checksum = "25062fddd51960a7355cc7043f8679fb717ff7f3ffc12e012c93ad2f010642b9"
 dependencies = [
  "material-colors",
  "spectrum-core",
@@ -296,9 +321,9 @@ dependencies = [
 
 [[package]]
 name = "spectrum-resolver"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bed9cad9b41a137d1ef34702b45c3371475b6cf21b5a3c3b76fe932d95429dad"
+checksum = "f0813d812d8b2ba8eaebc23360709924b4971e62d3e42e433dc53d84225a6f72"
 dependencies = [
  "spectrum-core",
  "spectrum-palette",
@@ -308,9 +333,9 @@ dependencies = [
 
 [[package]]
 name = "spectrum-schema"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "460d2c841751d1f2ba5edc32b92bd7e3d921147165ed9430a8e9bef9d01e9c32"
+checksum = "7d6ccf816042f6a046d5f4b1bad367e13757e4a0218090130b24a8857da292f2"
 dependencies = [
  "serde",
  "spectrum-core",
@@ -320,9 +345,9 @@ dependencies = [
 
 [[package]]
 name = "spectrum-theme"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6b04523de58caafac5e299c7b0a62ea337644d06200e88afea3330fc8ae48249"
+checksum = "62829c6c87fda804683643528742ba5f8b7857c54854dd75dd47410237d1a00b"
 dependencies = [
  "spectrum-codegen",
  "spectrum-core",
@@ -429,9 +454,9 @@ checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 
 [[package]]
 name = "void-spectrum-macros"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f27aaed0ff97cb10b4a964c1c92aa0c0b3eed45a966117beca2bfbccb1d7f986"
+checksum = "b935eab5da701a2a3a0f3179989089f8b9d4c5e0e3998b018b2554ba54092773"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2",
