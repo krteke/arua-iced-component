@@ -7,7 +7,7 @@ pub mod theme;
 
 pub use aura_anim_core::{Motion, MotionError, MotionRuntime};
 pub use button::{ButtonResolvedStyle, ButtonStyleState, ButtonVariant};
-pub use component::ComponentMotion;
+pub use component::{ComponentContext, ComponentMotion};
 pub use motion::{
     Duration, Easing, MotionPreferences, MotionPreferencesController, MotionSpeed, MotionTokens,
     MotionTransition, Timing,

@@ -1,6 +1,10 @@
 //! Shared component-side motion handles.
 
+mod context;
+
 use aura_anim_core::{Animatable, Motion, MotionError, MotionRuntime, timing::Timing};
+
+pub use context::ComponentContext;
 
 /// Component-owned optional motion handle.
 ///

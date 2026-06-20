@@ -1,4 +1,4 @@
-use crate::{Color, Radius, ShadowLayer, ThemeContext, ThemePack};
+use crate::{Color, ComponentContext, Radius, ShadowLayer, ThemeContext, ThemePack};
 
 /// Visual role for resolving surface theme tokens.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -61,6 +61,12 @@ impl SurfaceStyleTokens {
     pub fn from_context(context: &ThemeContext, role: SurfaceRole) -> Self {
         Self::from_theme(context.theme(), role)
     }
+
+    /// Resolves surface style tokens from a component context.
+    #[must_use]
+    pub fn from_component_context(context: &ComponentContext, role: SurfaceRole) -> Self {
+        Self::from_context(context.theme(), role)
+    }
 }
 
 #[cfg(test)]
@@ -98,5 +104,16 @@ mod tests {
 
         assert_eq!(style.background, scoped_bg);
         assert_ne!(context.theme().surface.raised.bg, scoped_bg);
+    }
+
+    #[test]
+    fn surface_style_uses_component_context() {
+        let scoped_bg = crate::Color::new(238, 244, 250);
+        let context = crate::ComponentContext::current()
+            .scoped_theme(|theme| theme.surface.raised.bg = scoped_bg);
+
+        let style = SurfaceStyleTokens::from_component_context(&context, SurfaceRole::Raised);
+
+        assert_eq!(style.background, scoped_bg);
     }
 }
