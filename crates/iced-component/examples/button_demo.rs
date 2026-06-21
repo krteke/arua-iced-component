@@ -23,14 +23,17 @@ struct Demo {
     context: ComponentContext,
     reduce_motion: MotionPreferencesController,
     save_button: AnimatedButton,
+    reset_button: AnimatedButton,
     clicks: u32,
 }
 
 #[derive(Debug, Clone, Copy)]
 enum Message {
     Tick,
-    Button(ButtonInteraction),
+    SaveButton(ButtonInteraction),
+    ResetButton(ButtonInteraction),
     SaveReleased,
+    ResetReleased,
     ToggleReduceMotion,
 }
 
@@ -40,14 +43,17 @@ impl Demo {
         let mut runtime = MotionRuntime::new();
         let context = ComponentContext::current().with_motion_preferences(preferences);
         let mut save_button = AnimatedButton::primary("Save");
+        let mut reset_button = AnimatedButton::standard("Reset");
 
         save_button.register(&mut runtime, &context);
+        reset_button.register(&mut runtime, &context);
 
         Self {
             runtime,
             context,
             reduce_motion,
             save_button,
+            reset_button,
             clicks: 0,
         }
     }
@@ -60,14 +66,23 @@ fn update(state: &mut Demo, message: Message) -> Task<Message> {
                 .runtime
                 .tick(iced_component::motion::Duration::from_millis(16.0));
         }
-        Message::Button(interaction) => {
+        Message::SaveButton(interaction) => {
             let _ = state.save_button.update(interaction, &mut state.runtime);
+        }
+        Message::ResetButton(interaction) => {
+            let _ = state.reset_button.update(interaction, &mut state.runtime);
         }
         Message::SaveReleased => {
             let _ = state
                 .save_button
                 .update(ButtonInteraction::PressUp, &mut state.runtime);
             state.clicks += 1;
+        }
+        Message::ResetReleased => {
+            let _ = state
+                .reset_button
+                .update(ButtonInteraction::PressUp, &mut state.runtime);
+            state.clicks = 0;
         }
         Message::ToggleReduceMotion => {
             let next = !state.reduce_motion.reduce_motion();
@@ -76,12 +91,6 @@ fn update(state: &mut Demo, message: Message) -> Task<Message> {
     }
 
     Task::none()
-}
-
-impl From<ButtonInteraction> for Message {
-    fn from(interaction: ButtonInteraction) -> Self {
-        Self::Button(interaction)
-    }
 }
 
 fn subscription(_state: &Demo) -> Subscription<Message> {
@@ -96,7 +105,13 @@ fn view(state: &Demo) -> Element<'_, Message> {
     let save = state
         .save_button
         .view(&state.runtime, &state.context)
+        .on_interaction(Message::SaveButton)
         .on_press(Message::SaveReleased);
+    let reset = state
+        .reset_button
+        .view(&state.runtime, &state.context)
+        .on_interaction(Message::ResetButton)
+        .on_press(Message::ResetReleased);
 
     let snapshot = state
         .save_button
@@ -114,6 +129,7 @@ fn view(state: &Demo) -> Element<'_, Message> {
         text("Hover, press, and toggle reduced motion to see the component runtime path."),
         row![
             save,
+            reset,
             button(text(reduce_label))
                 .on_press(Message::ToggleReduceMotion)
                 .padding([8.0, 12.0])

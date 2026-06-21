@@ -12,6 +12,7 @@ use crate::{MotionError, MotionRuntime};
 pub struct AnimatedButtonView<'a, Message> {
     snapshot: AnimatedButtonSnapshot,
     label: &'a str,
+    on_interaction: Option<Box<dyn Fn(ButtonInteraction) -> Message + 'a>>,
     on_press: Option<Message>,
     padding: [f32; 2],
 }
@@ -25,7 +26,7 @@ impl AnimatedButton {
         context: &ComponentContext,
     ) -> AnimatedButtonView<'a, Message>
     where
-        Message: From<ButtonInteraction> + Clone + 'a,
+        Message: Clone + 'a,
     {
         self.try_view(runtime, context)
             .expect("button motion handle belongs to the provided runtime")
@@ -38,18 +39,26 @@ impl AnimatedButton {
         context: &ComponentContext,
     ) -> Result<AnimatedButtonView<'a, Message>, MotionError>
     where
-        Message: From<ButtonInteraction> + Clone + 'a,
+        Message: Clone + 'a,
     {
         Ok(AnimatedButtonView {
             snapshot: self.snapshot(runtime, context)?,
             label: self.label(),
+            on_interaction: None,
             on_press: None,
             padding: [8.0, 14.0],
         })
     }
 }
 
-impl<Message> AnimatedButtonView<'_, Message> {
+impl<'a, Message> AnimatedButtonView<'a, Message> {
+    /// Maps internal button interactions into application messages.
+    #[must_use]
+    pub fn on_interaction(mut self, mapper: impl Fn(ButtonInteraction) -> Message + 'a) -> Self {
+        self.on_interaction = Some(Box::new(mapper));
+        self
+    }
+
     /// Sets the application message emitted when the button is released.
     #[must_use]
     pub fn on_press(mut self, message: Message) -> Self {
@@ -74,7 +83,7 @@ impl<Message> AnimatedButtonView<'_, Message> {
 
 impl<'a, Message> From<AnimatedButtonView<'a, Message>> for Element<'a, Message>
 where
-    Message: From<ButtonInteraction> + Clone + 'a,
+    Message: Clone + 'a,
 {
     fn from(view: AnimatedButtonView<'a, Message>) -> Self {
         let widget = button(text(view.label))
@@ -84,13 +93,17 @@ where
         if view.snapshot.disabled {
             widget.into()
         } else {
+            let on_interaction = view
+                .on_interaction
+                .expect("AnimatedButtonView requires on_interaction for enabled buttons");
+
             mouse_area(widget)
-                .on_enter(ButtonInteraction::HoverEnter.into())
-                .on_exit(ButtonInteraction::HoverExit.into())
-                .on_press(ButtonInteraction::PressDown.into())
+                .on_enter(on_interaction(ButtonInteraction::HoverEnter))
+                .on_exit(on_interaction(ButtonInteraction::HoverExit))
+                .on_press(on_interaction(ButtonInteraction::PressDown))
                 .on_release(
                     view.on_press
-                        .unwrap_or_else(|| ButtonInteraction::PressUp.into()),
+                        .unwrap_or_else(|| on_interaction(ButtonInteraction::PressUp)),
                 )
                 .into()
         }
@@ -175,20 +188,40 @@ mod tests {
     fn view_builder_accepts_app_press_message() {
         #[derive(Clone)]
         enum Message {
-            Interaction,
+            Interaction(ButtonInteraction),
             Save,
-        }
-
-        impl From<ButtonInteraction> for Message {
-            fn from(_interaction: ButtonInteraction) -> Self {
-                Self::Interaction
-            }
         }
 
         let runtime = MotionRuntime::new();
         let context = ComponentContext::current();
         let button = AnimatedButton::primary("Save");
-        let view = button.view(&runtime, &context).on_press(Message::Save);
+        let view = button
+            .view(&runtime, &context)
+            .on_interaction(Message::Interaction)
+            .on_press(Message::Save);
+        let _element: Element<'_, Message> = view.into();
+
+        let Message::Interaction(interaction) = Message::Interaction(ButtonInteraction::HoverEnter)
+        else {
+            unreachable!("constructed as an interaction message");
+        };
+        assert_eq!(interaction, ButtonInteraction::HoverEnter);
+    }
+
+    #[test]
+    fn disabled_view_does_not_require_interaction_mapper() {
+        #[derive(Clone)]
+        enum Message {}
+
+        let mut runtime = MotionRuntime::new();
+        let context = ComponentContext::current();
+        let mut button = AnimatedButton::primary("Save");
+
+        button
+            .update(ButtonInteraction::SetDisabled(true), &mut runtime)
+            .unwrap();
+
+        let view = button.view(&runtime, &context);
         let _element: Element<'_, Message> = view.into();
     }
 }
