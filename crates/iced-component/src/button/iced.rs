@@ -84,6 +84,22 @@ impl<'a, Message, Action> AnimatedButtonView<'a, Message, Action> {
         }
     }
 
+    /// Sets the release action and maps all button events into application messages.
+    #[must_use]
+    pub fn on_press_event<NextAction>(
+        self,
+        action: NextAction,
+        mapper: impl Fn(ButtonEvent<NextAction>) -> Message + 'a,
+    ) -> AnimatedButtonView<'a, Message, NextAction> {
+        AnimatedButtonView {
+            snapshot: self.snapshot,
+            label: self.label,
+            on_event: Some(Box::new(mapper)),
+            on_press: Some(action),
+            padding: self.padding,
+        }
+    }
+
     /// Sets the application action emitted when the button is released, if any.
     #[must_use]
     pub fn on_press_maybe<NextAction>(
@@ -234,8 +250,7 @@ mod tests {
         let button = AnimatedButton::primary("Save");
         let view = button
             .view(&runtime, &context)
-            .on_press(Action::Save)
-            .on_event(Message::Button);
+            .on_press_event(Action::Save, Message::Button);
         let _element: Element<'_, Message> = view.into();
 
         let Message::Button(event) = Message::Button(ButtonEvent::Pressed(Action::Save));

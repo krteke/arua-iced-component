@@ -4,10 +4,10 @@ use std::time::Duration;
 
 use iced::widget::{button, column, container, row, text};
 use iced::{Element, Fill, Subscription, Task, Theme, application, time};
-use iced_component::MotionRuntime;
 use iced_component::button::{AnimatedButton, ButtonEvent};
 use iced_component::component::ComponentContext;
 use iced_component::motion::{MotionPreferences, MotionPreferencesController};
+use iced_component::{MotionError, MotionRuntime};
 
 fn main() -> iced::Result {
     application(Demo::new, update, view)
@@ -25,6 +25,7 @@ struct Demo {
     save_button: AnimatedButton,
     reset_button: AnimatedButton,
     clicks: u32,
+    motion_error: Option<String>,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -63,6 +64,7 @@ impl Demo {
             save_button,
             reset_button,
             clicks: 0,
+            motion_error: None,
         }
     }
 }
@@ -75,26 +77,24 @@ fn update(state: &mut Demo, message: Message) -> Task<Message> {
                 .tick(iced_component::motion::Duration::from_millis(16.0));
         }
         Message::SaveButton(event) => {
-            if state
-                .save_button
-                .update_event(event, &mut state.runtime)
-                .ok()
-                .flatten()
-                .is_some()
-            {
-                state.clicks += 1;
-            }
+            let result = state.save_button.update_event_with(
+                event,
+                &mut state.runtime,
+                |SaveAction::Save| {
+                    state.clicks += 1;
+                },
+            );
+            record_motion_result(state, result);
         }
         Message::ResetButton(event) => {
-            if state
-                .reset_button
-                .update_event(event, &mut state.runtime)
-                .ok()
-                .flatten()
-                .is_some()
-            {
-                state.clicks = 0;
-            }
+            let result = state.reset_button.update_event_with(
+                event,
+                &mut state.runtime,
+                |ResetAction::Reset| {
+                    state.clicks = 0;
+                },
+            );
+            record_motion_result(state, result);
         }
         Message::ToggleReduceMotion => {
             let next = !state.reduce_motion.reduce_motion();
@@ -103,6 +103,13 @@ fn update(state: &mut Demo, message: Message) -> Task<Message> {
     }
 
     Task::none()
+}
+
+fn record_motion_result(state: &mut Demo, result: Result<bool, MotionError>) {
+    match result {
+        Ok(_) => state.motion_error = None,
+        Err(error) => state.motion_error = Some(error.to_string()),
+    }
 }
 
 fn subscription(_state: &Demo) -> Subscription<Message> {
@@ -117,13 +124,11 @@ fn view(state: &Demo) -> Element<'_, Message> {
     let save = state
         .save_button
         .view(&state.runtime, &state.context)
-        .on_press(SaveAction::Save)
-        .on_event(Message::SaveButton);
+        .on_press_event(SaveAction::Save, Message::SaveButton);
     let reset = state
         .reset_button
         .view(&state.runtime, &state.context)
-        .on_press(ResetAction::Reset)
-        .on_event(Message::ResetButton);
+        .on_press_event(ResetAction::Reset, Message::ResetButton);
 
     let snapshot = state
         .save_button
@@ -151,6 +156,13 @@ fn view(state: &Demo) -> Element<'_, Message> {
             "motion: scale {:.2}, shadow_y {:.2}, bg_alpha {:.2}",
             snapshot.motion.scale, snapshot.motion.shadow_y, snapshot.motion.bg_alpha
         ))
+        .size(14),
+        text(
+            state
+                .motion_error
+                .as_deref()
+                .unwrap_or("motion runtime: ok")
+        )
         .size(14),
     ]
     .spacing(16);

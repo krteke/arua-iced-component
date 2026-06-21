@@ -165,6 +165,21 @@ impl AnimatedButton {
         }
     }
 
+    /// Applies a button event and invokes `on_action` when release yields an action.
+    pub fn update_event_with<Action>(
+        &mut self,
+        event: ButtonEvent<Action>,
+        runtime: &mut MotionRuntime,
+        on_action: impl FnOnce(Action),
+    ) -> Result<bool, MotionError> {
+        if let Some(action) = self.update_event(event, runtime)? {
+            on_action(action);
+            Ok(true)
+        } else {
+            Ok(false)
+        }
+    }
+
     /// Returns the current runtime motion value, or the target value before registration.
     pub fn motion_value(&self, runtime: &MotionRuntime) -> Result<ButtonMotion, MotionError> {
         Ok(self
@@ -402,6 +417,52 @@ mod tests {
                 .style_state,
             ButtonStyleState::Idle
         );
+    }
+
+    #[test]
+    fn update_event_with_invokes_action_only_for_pressed_event() {
+        let mut runtime = MotionRuntime::new();
+        let mut button = AnimatedButton::standard("Save");
+        let mut action_count = 0;
+
+        let handled = button
+            .update_event_with(
+                ButtonEvent::Interaction(ButtonInteraction::HoverEnter),
+                &mut runtime,
+                |()| action_count += 1,
+            )
+            .unwrap();
+
+        assert!(!handled);
+        assert_eq!(action_count, 0);
+
+        let handled = button
+            .update_event_with(ButtonEvent::Pressed(()), &mut runtime, |()| {
+                action_count += 1;
+            })
+            .unwrap();
+
+        assert!(handled);
+        assert_eq!(action_count, 1);
+    }
+
+    #[test]
+    fn update_event_with_ignores_pressed_action_when_disabled() {
+        let mut runtime = MotionRuntime::new();
+        let mut button = AnimatedButton::standard("Save");
+        let mut action_count = 0;
+
+        button
+            .update(ButtonInteraction::SetDisabled(true), &mut runtime)
+            .unwrap();
+        let handled = button
+            .update_event_with(ButtonEvent::Pressed(()), &mut runtime, |()| {
+                action_count += 1;
+            })
+            .unwrap();
+
+        assert!(!handled);
+        assert_eq!(action_count, 0);
     }
 
     #[test]
