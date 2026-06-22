@@ -1,25 +1,13 @@
-use aura_anim_core::{Animatable, MotionError, MotionRuntime, timing::Timing};
+use aura_anim_core::{MotionError, MotionRuntime, timing::Timing};
 
 use crate::{
-    button::{ButtonResolvedStyle, ButtonStyleState, ButtonVariant},
+    button::{
+        ButtonResolvedStyle, ButtonStyleState, ButtonVariant, flags::ButtonFlags,
+        motion::ButtonMotion,
+    },
     component::{ComponentContext, ComponentMotion},
     motion::{Easing, MotionSpeed, MotionTransition},
 };
-
-/// Animatable visual values for an animated button.
-#[derive(Clone, Copy, Debug, PartialEq, Animatable)]
-pub struct ButtonMotion {
-    /// Content scale multiplier.
-    pub scale: f32,
-    /// Vertical shadow offset multiplier.
-    pub shadow_y: f32,
-    /// Background emphasis multiplier.
-    pub bg_alpha: f32,
-    /// Border glow opacity.
-    pub border_glow: f32,
-    /// Focus ring opacity.
-    pub focus_alpha: f32,
-}
 
 /// Read-only button state consumed by rendering code.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -245,82 +233,6 @@ impl AnimatedButton {
         }
 
         ButtonMotion::idle_with_focus(focused)
-    }
-}
-
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
-struct ButtonFlags(u8);
-
-impl ButtonFlags {
-    const HOVERED: Self = Self(1 << 0);
-    const PRESSED: Self = Self(1 << 1);
-    const FOCUSED: Self = Self(1 << 2);
-    const DISABLED: Self = Self(1 << 3);
-
-    const fn empty() -> Self {
-        Self(0)
-    }
-
-    const fn contains(self, flags: Self) -> bool {
-        self.0 & flags.0 == flags.0
-    }
-
-    fn insert(&mut self, flags: Self) {
-        self.0 |= flags.0;
-    }
-
-    fn remove(&mut self, flags: Self) {
-        self.0 &= !flags.0;
-    }
-}
-
-impl core::ops::BitOr for ButtonFlags {
-    type Output = Self;
-
-    fn bitor(self, rhs: Self) -> Self::Output {
-        Self(self.0 | rhs.0)
-    }
-}
-
-impl ButtonMotion {
-    const fn idle() -> Self {
-        Self::idle_with_focus(false)
-    }
-
-    const fn idle_with_focus(focused: bool) -> Self {
-        Self {
-            scale: 1.0,
-            shadow_y: 1.0,
-            bg_alpha: 1.0,
-            border_glow: if focused { 1.0 } else { 0.0 },
-            focus_alpha: if focused { 1.0 } else { 0.0 },
-        }
-    }
-
-    const fn hovered(focused: bool) -> Self {
-        Self {
-            shadow_y: 1.2,
-            ..Self::idle_with_focus(focused)
-        }
-    }
-
-    const fn pressed(focused: bool) -> Self {
-        Self {
-            scale: 0.98,
-            shadow_y: 0.35,
-            bg_alpha: 0.95,
-            ..Self::idle_with_focus(focused)
-        }
-    }
-
-    const fn disabled(focused: bool) -> Self {
-        Self {
-            scale: 1.0,
-            shadow_y: 0.0,
-            bg_alpha: 0.45,
-            border_glow: 0.0,
-            focus_alpha: if focused { 0.5 } else { 0.0 },
-        }
     }
 }
 

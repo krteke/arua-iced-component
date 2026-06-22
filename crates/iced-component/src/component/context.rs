@@ -92,7 +92,7 @@ mod tests {
 
     use crate::{
         component::ComponentContext,
-        motion::{MotionPreferences, MotionSpeed, MotionTokens},
+        motion::{MotionPreferences, MotionSpeed, MotionSpringTokens, MotionTokens},
     };
 
     #[test]
@@ -114,9 +114,12 @@ mod tests {
     fn context_can_override_motion_inputs() {
         let (preferences, _controller) = MotionPreferences::new(true);
         let tokens = MotionTokens {
+            micro: Duration::from_millis(20.0),
             fast: Duration::from_millis(40.0),
             normal: Duration::from_millis(80.0),
             slow: Duration::from_millis(120.0),
+            slower: Duration::from_millis(160.0),
+            spring: MotionSpringTokens::default(),
         };
 
         let context = ComponentContext::current()

@@ -136,9 +136,9 @@ where
         if view.snapshot.disabled {
             widget.into()
         } else {
-            let on_event = view
-                .on_event
-                .expect("AnimatedButtonView requires on_event for enabled buttons");
+            let Some(on_event) = view.on_event else {
+                return widget.into();
+            };
 
             mouse_area(widget)
                 .on_enter(on_event(ButtonEvent::Interaction(
@@ -269,6 +269,19 @@ mod tests {
         button
             .update(ButtonInteraction::SetDisabled(true), &mut runtime)
             .unwrap();
+
+        let view = button.view(&runtime, &context);
+        let _element: Element<'_, Message> = view.into();
+    }
+
+    #[test]
+    fn enabled_view_without_event_mapper_renders_static_button() {
+        #[derive(Clone)]
+        enum Message {}
+
+        let runtime = MotionRuntime::new();
+        let context = ComponentContext::current();
+        let button = AnimatedButton::primary("Save");
 
         let view = button.view(&runtime, &context);
         let _element: Element<'_, Message> = view.into();
