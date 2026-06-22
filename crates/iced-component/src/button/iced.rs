@@ -3,6 +3,7 @@
 use iced::widget::{button, mouse_area, text};
 use iced::{Background, Border, Color, Element, Length, Shadow, Vector};
 use spectrum_theme::iced::{IcedColorAdapter, IcedRadiusAdapter, IcedShadowAdapter};
+use std::borrow::Cow;
 
 use super::{AnimatedButton, AnimatedButtonSnapshot, ButtonEvent, ButtonInteraction};
 use crate::component::ComponentContext;
@@ -16,6 +17,44 @@ pub struct AnimatedButtonView<'a, Message, Action = ()> {
     padding: [f32; 2],
     width: Option<Length>,
     height: Option<Length>,
+}
+
+/// Content accepted by [`AnimatedButtonView`].
+pub enum ButtonContent<'a, Message> {
+    /// Text content rendered with Iced's text widget.
+    Text(Cow<'a, str>),
+    /// Fully custom Iced content.
+    Element(Element<'a, Message>),
+}
+
+impl<'a, Message> ButtonContent<'a, Message>
+where
+    Message: 'a,
+{
+    fn into_element(self) -> Element<'a, Message> {
+        match self {
+            Self::Text(content) => text(content).into(),
+            Self::Element(content) => content,
+        }
+    }
+}
+
+impl<'a, Message> From<&'a str> for ButtonContent<'a, Message> {
+    fn from(content: &'a str) -> Self {
+        Self::Text(Cow::Borrowed(content))
+    }
+}
+
+impl<Message> From<String> for ButtonContent<'_, Message> {
+    fn from(content: String) -> Self {
+        Self::Text(Cow::Owned(content))
+    }
+}
+
+impl<'a, Message> From<Element<'a, Message>> for ButtonContent<'a, Message> {
+    fn from(content: Element<'a, Message>) -> Self {
+        Self::Element(content)
+    }
 }
 
 struct ButtonViewEvents<'a, Message, Action = ()> {
@@ -89,7 +128,7 @@ impl AnimatedButton {
     {
         Ok(AnimatedButtonView {
             snapshot: self.snapshot(runtime, context)?,
-            content: text(self.label()).into(),
+            content: ButtonContent::from(self.label()).into_element(),
             events: ButtonViewEvents::new(),
             padding: [8.0, 14.0],
             width: None,
@@ -114,7 +153,17 @@ impl<'a, Message, Action> AnimatedButtonView<'a, Message, Action> {
 
     /// Replaces the default label with custom Iced content.
     #[must_use]
-    pub fn content(mut self, content: impl Into<Element<'a, Message>>) -> Self {
+    pub fn content(mut self, content: impl Into<ButtonContent<'a, Message>>) -> Self
+    where
+        Message: 'a,
+    {
+        self.content = content.into().into_element();
+        self
+    }
+
+    /// Replaces the default label with custom Iced element content.
+    #[must_use]
+    pub fn element(mut self, content: impl Into<Element<'a, Message>>) -> Self {
         self.content = content.into();
         self
     }
@@ -416,7 +465,21 @@ mod tests {
 
         let view = button
             .view(&runtime, &context)
-            .content(container(text("Info")))
+            .element(container(text("Info")))
+            .on_press(())
+            .map_event(|_| ());
+        let _element: Element<'_, ()> = view.into();
+    }
+
+    #[test]
+    fn view_builder_accepts_text_content() {
+        let runtime = MotionRuntime::new();
+        let context = ComponentContext::current();
+        let button = AnimatedButton::standard("");
+
+        let view = button
+            .view(&runtime, &context)
+            .content("i")
             .on_press(())
             .map_event(|_| ());
         let _element: Element<'_, ()> = view.into();

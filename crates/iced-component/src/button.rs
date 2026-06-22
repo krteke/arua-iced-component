@@ -4,12 +4,14 @@ mod animated;
 mod flags;
 #[cfg(feature = "iced")]
 mod iced;
+mod icon;
 mod motion;
 mod style;
 
 pub use animated::{AnimatedButton, AnimatedButtonSnapshot, ButtonEvent, ButtonInteraction};
 #[cfg(feature = "iced")]
-pub use iced::{AnimatedButtonView, button_style};
+pub use iced::{AnimatedButtonView, ButtonContent, button_style};
+pub use icon::AnimatedIconButton;
 pub use motion::ButtonMotion;
 pub use style::{
     ButtonAppearance, ButtonResolvedStyle, ButtonRole, ButtonStyleState, ButtonVariant,
