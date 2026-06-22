@@ -1,4 +1,4 @@
-use spectrum_theme::{Color, Radius, ShadowLayer};
+use spectrum_theme::{Color, Length, LengthUnit, Radius, ShadowLayer};
 
 use crate::{
     component::ComponentContext,
@@ -186,12 +186,18 @@ impl ButtonResolvedStyle {
                 self.shadow = transparent_shadow(self.shadow);
                 self
             }
-            ButtonAppearance::Default
-            | ButtonAppearance::Raised
-            | ButtonAppearance::Pill
-            | ButtonAppearance::Circular => self,
+            ButtonAppearance::Pill | ButtonAppearance::Circular => {
+                self.radius = capsule_radius();
+                self
+            }
+            ButtonAppearance::Default | ButtonAppearance::Raised => self,
         }
     }
+}
+
+fn capsule_radius() -> Radius {
+    Radius::new(Length::new(999.0, LengthUnit::Px).expect("finite positive px length is valid"))
+        .expect("positive length is a valid radius")
 }
 
 fn transparent(color: Color) -> Color {
@@ -351,6 +357,18 @@ mod tests {
         assert_eq!(style.background, theme.button.suggested.bg);
         assert_eq!(style.border, theme.button.suggested.border);
         assert_eq!(style.shadow, theme.button.suggested.shadow);
+    }
+
+    #[test]
+    fn pill_and_circular_appearance_use_capsule_radius() {
+        let theme = ThemePack::adwaita();
+
+        for appearance in [ButtonAppearance::Pill, ButtonAppearance::Circular] {
+            let variant = ButtonVariant::STANDARD.with_appearance(appearance);
+            let style = ButtonResolvedStyle::from_theme(&theme, variant, ButtonStyleState::Idle);
+
+            assert!(style.radius.length().value() > theme.button.standard.radius.length().value());
+        }
     }
 
     #[test]

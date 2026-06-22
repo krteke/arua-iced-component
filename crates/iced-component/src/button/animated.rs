@@ -132,6 +132,21 @@ impl AnimatedButton {
         self.with_appearance(ButtonAppearance::Raised)
     }
 
+    /// Returns this button with fully rounded capsule styling.
+    #[must_use]
+    pub fn pill(self) -> Self {
+        self.with_appearance(ButtonAppearance::Pill)
+    }
+
+    /// Returns this button with circular styling.
+    ///
+    /// Pair this with view sizing such as `square(34.0)` for icon-style
+    /// buttons.
+    #[must_use]
+    pub fn circular(self) -> Self {
+        self.with_appearance(ButtonAppearance::Circular)
+    }
+
     /// Returns this button with disabled state preconfigured.
     #[must_use]
     pub fn disabled(mut self, disabled: bool) -> Self {
@@ -370,6 +385,18 @@ mod tests {
         assert_eq!(
             button.variant(),
             ButtonVariant::DESTRUCTIVE.with_appearance(ButtonAppearance::Raised)
+        );
+
+        let button = AnimatedButton::standard("Info").pill();
+        assert_eq!(
+            button.variant(),
+            ButtonVariant::STANDARD.with_appearance(ButtonAppearance::Pill)
+        );
+
+        let button = AnimatedButton::standard("i").circular();
+        assert_eq!(
+            button.variant(),
+            ButtonVariant::STANDARD.with_appearance(ButtonAppearance::Circular)
         );
     }
 

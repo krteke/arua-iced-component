@@ -1,7 +1,7 @@
 //! Iced integration for animated buttons.
 
 use iced::widget::{button, mouse_area, text};
-use iced::{Background, Border, Color, Element, Shadow, Vector};
+use iced::{Background, Border, Color, Element, Length, Shadow, Vector};
 use spectrum_theme::iced::{IcedColorAdapter, IcedRadiusAdapter, IcedShadowAdapter};
 
 use super::{AnimatedButton, AnimatedButtonSnapshot, ButtonEvent, ButtonInteraction};
@@ -15,6 +15,8 @@ pub struct AnimatedButtonView<'a, Message, Action = ()> {
     on_event: Option<Box<dyn Fn(ButtonEvent<Action>) -> Message + 'a>>,
     on_press: Option<Action>,
     padding: [f32; 2],
+    width: Option<Length>,
+    height: Option<Length>,
 }
 
 impl AnimatedButton {
@@ -47,6 +49,8 @@ impl AnimatedButton {
             on_event: None,
             on_press: None,
             padding: [8.0, 14.0],
+            width: None,
+            height: None,
         })
     }
 }
@@ -90,6 +94,8 @@ impl<'a, Message, Action> AnimatedButtonView<'a, Message, Action> {
             on_event: None,
             on_press: Some(action),
             padding: self.padding,
+            width: self.width,
+            height: self.height,
         }
     }
 
@@ -106,6 +112,8 @@ impl<'a, Message, Action> AnimatedButtonView<'a, Message, Action> {
             on_event: Some(Box::new(mapper)),
             on_press: Some(action),
             padding: self.padding,
+            width: self.width,
+            height: self.height,
         }
     }
 
@@ -121,6 +129,8 @@ impl<'a, Message, Action> AnimatedButtonView<'a, Message, Action> {
             on_event: None,
             on_press: action,
             padding: self.padding,
+            width: self.width,
+            height: self.height,
         }
     }
 
@@ -128,6 +138,36 @@ impl<'a, Message, Action> AnimatedButtonView<'a, Message, Action> {
     #[must_use]
     pub const fn padding(mut self, padding: [f32; 2]) -> Self {
         self.padding = padding;
+        self
+    }
+
+    /// Uses compact button padding.
+    #[must_use]
+    pub const fn compact(mut self) -> Self {
+        self.padding = [4.0, 8.0];
+        self
+    }
+
+    /// Sets the rendered button width.
+    #[must_use]
+    pub fn width(mut self, width: impl Into<Length>) -> Self {
+        self.width = Some(width.into());
+        self
+    }
+
+    /// Sets the rendered button height.
+    #[must_use]
+    pub fn height(mut self, height: impl Into<Length>) -> Self {
+        self.height = Some(height.into());
+        self
+    }
+
+    /// Sets equal width and height, useful for circular icon buttons.
+    #[must_use]
+    pub fn square(mut self, size: f32) -> Self {
+        self.width = Some(Length::Fixed(size));
+        self.height = Some(Length::Fixed(size));
+        self.padding = [0.0, 0.0];
         self
     }
 }
@@ -138,9 +178,15 @@ where
     Action: 'a,
 {
     fn from(view: AnimatedButtonView<'a, Message, Action>) -> Self {
-        let widget = button(text(view.label))
+        let mut widget = button(text(view.label))
             .padding(view.padding)
             .style(move |_theme, _status| button_style(view.snapshot));
+        if let Some(width) = view.width {
+            widget = widget.width(width);
+        }
+        if let Some(height) = view.height {
+            widget = widget.height(height);
+        }
 
         if view.snapshot.disabled {
             widget.into()
@@ -295,5 +341,22 @@ mod tests {
 
         let view = button.view(&runtime, &context);
         let _element: Element<'_, Message> = view.into();
+    }
+
+    #[test]
+    fn view_builder_accepts_sizing_helpers() {
+        let runtime = MotionRuntime::new();
+        let context = ComponentContext::current();
+        let button = AnimatedButton::standard("i").circular();
+
+        let view = button
+            .view(&runtime, &context)
+            .compact()
+            .width(34.0)
+            .height(34.0)
+            .square(34.0)
+            .on_press(())
+            .map_event(|_| ());
+        let _element: Element<'_, ()> = view.into();
     }
 }
