@@ -2,18 +2,69 @@ use spectrum_theme::{Color, Radius, ShadowLayer};
 
 use crate::{
     component::ComponentContext,
-    theme::{ButtonStandardTokens, ButtonSuggestedTokens, ThemeContext, ThemePack},
+    theme::{
+        ButtonDestructiveTokens, ButtonStandardTokens, ButtonSuggestedTokens, ThemeContext,
+        ThemePack,
+    },
 };
 
-/// Visual role for resolving button theme tokens.
+/// Semantic role for resolving button theme tokens.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum ButtonVariant {
-    /// Neutral action using standard button tokens.
+pub enum ButtonRole {
+    /// Neutral action.
     Standard,
-    /// Recommended action using suggested button tokens.
+    /// Recommended action.
     Suggested,
-    /// Backward-compatible alias for [`ButtonVariant::Suggested`].
-    Primary,
+    /// Dangerous or destructive action.
+    Destructive,
+}
+
+/// Visual treatment for a button.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum ButtonAppearance {
+    /// Theme default treatment for the role.
+    Default,
+    /// Minimal treatment for low-emphasis buttons.
+    Flat,
+    /// Explicit raised treatment.
+    Raised,
+    /// Fully rounded capsule treatment.
+    Pill,
+    /// Equal-width circular icon-style treatment.
+    Circular,
+}
+
+/// Complete visual variant for resolving button style.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ButtonVariant {
+    /// Semantic role.
+    pub role: ButtonRole,
+    /// Visual treatment.
+    pub appearance: ButtonAppearance,
+}
+
+impl ButtonVariant {
+    /// Neutral default button.
+    pub const STANDARD: Self = Self::new(ButtonRole::Standard, ButtonAppearance::Default);
+    /// Recommended-action default button.
+    pub const SUGGESTED: Self = Self::new(ButtonRole::Suggested, ButtonAppearance::Default);
+    /// Backward-compatible alias for [`ButtonVariant::SUGGESTED`].
+    pub const PRIMARY: Self = Self::SUGGESTED;
+    /// Destructive-action default button.
+    pub const DESTRUCTIVE: Self = Self::new(ButtonRole::Destructive, ButtonAppearance::Default);
+
+    /// Creates a button variant from role and appearance.
+    #[must_use]
+    pub const fn new(role: ButtonRole, appearance: ButtonAppearance) -> Self {
+        Self { role, appearance }
+    }
+
+    /// Returns this variant with a different visual appearance.
+    #[must_use]
+    pub const fn with_appearance(mut self, appearance: ButtonAppearance) -> Self {
+        self.appearance = appearance;
+        self
+    }
 }
 
 /// Visual state for resolving final button style.
@@ -50,10 +101,11 @@ impl ButtonResolvedStyle {
     /// Resolves final button style from generated theme tokens.
     #[must_use]
     pub fn from_theme(theme: &ThemePack, variant: ButtonVariant, state: ButtonStyleState) -> Self {
-        match variant {
-            ButtonVariant::Standard => Self::from_standard_tokens(&theme.button.standard, state),
-            ButtonVariant::Suggested | ButtonVariant::Primary => {
-                Self::from_suggested_tokens(&theme.button.suggested, state)
+        match variant.role {
+            ButtonRole::Standard => Self::from_standard_tokens(&theme.button.standard, state),
+            ButtonRole::Suggested => Self::from_suggested_tokens(&theme.button.suggested, state),
+            ButtonRole::Destructive => {
+                Self::from_destructive_tokens(&theme.button.destructive, state)
             }
         }
     }
@@ -87,6 +139,15 @@ impl ButtonResolvedStyle {
     /// Resolves final style from suggested-action button tokens.
     #[must_use]
     pub fn from_suggested_tokens(tokens: &ButtonSuggestedTokens, state: ButtonStyleState) -> Self {
+        Self::from_tokens(tokens, state)
+    }
+
+    /// Resolves final style from destructive-action button tokens.
+    #[must_use]
+    pub fn from_destructive_tokens(
+        tokens: &ButtonDestructiveTokens,
+        state: ButtonStyleState,
+    ) -> Self {
         Self::from_tokens(tokens, state)
     }
 
@@ -161,6 +222,7 @@ macro_rules! impl_button_tokens {
 
 impl_button_tokens!(ButtonStandardTokens);
 impl_button_tokens!(ButtonSuggestedTokens);
+impl_button_tokens!(ButtonDestructiveTokens);
 
 #[cfg(test)]
 mod tests {
@@ -171,14 +233,16 @@ mod tests {
         theme::{ThemeContext, ThemePack},
     };
 
-    use super::{ButtonResolvedStyle, ButtonStyleState, ButtonVariant};
+    use super::{
+        ButtonAppearance, ButtonResolvedStyle, ButtonRole, ButtonStyleState, ButtonVariant,
+    };
 
     #[test]
     fn standard_button_uses_neutral_surface_tokens() {
         let theme = ThemePack::adwaita();
         let style = ButtonResolvedStyle::from_theme(
             &theme,
-            ButtonVariant::Standard,
+            ButtonVariant::STANDARD,
             ButtonStyleState::Idle,
         );
 
@@ -192,7 +256,7 @@ mod tests {
         let theme = ThemePack::adwaita();
         let style = ButtonResolvedStyle::from_theme(
             &theme,
-            ButtonVariant::Suggested,
+            ButtonVariant::SUGGESTED,
             ButtonStyleState::Idle,
         );
 
@@ -202,11 +266,37 @@ mod tests {
     }
 
     #[test]
+    fn destructive_button_uses_destructive_tokens() {
+        let theme = ThemePack::adwaita();
+        let style = ButtonResolvedStyle::from_theme(
+            &theme,
+            ButtonVariant::DESTRUCTIVE,
+            ButtonStyleState::Idle,
+        );
+
+        assert_eq!(style.background, theme.button.destructive.bg);
+        assert_eq!(style.foreground, theme.button.destructive.fg);
+        assert_eq!(style.border, theme.button.destructive.border);
+    }
+
+    #[test]
+    fn button_variant_keeps_role_and_appearance_separate() {
+        let variant = ButtonVariant::new(ButtonRole::Suggested, ButtonAppearance::Flat);
+
+        assert_eq!(variant.role, ButtonRole::Suggested);
+        assert_eq!(variant.appearance, ButtonAppearance::Flat);
+        assert_eq!(
+            ButtonVariant::SUGGESTED.with_appearance(ButtonAppearance::Pill),
+            ButtonVariant::new(ButtonRole::Suggested, ButtonAppearance::Pill)
+        );
+    }
+
+    #[test]
     fn button_shape_and_elevation_come_from_theme() {
         let theme = ThemePack::adwaita();
         let style = ButtonResolvedStyle::from_theme(
             &theme,
-            ButtonVariant::Standard,
+            ButtonVariant::STANDARD,
             ButtonStyleState::Idle,
         );
 
@@ -231,7 +321,7 @@ mod tests {
         assert_eq!(
             ButtonResolvedStyle::from_theme(
                 &theme,
-                ButtonVariant::Standard,
+                ButtonVariant::STANDARD,
                 ButtonStyleState::Hovered
             )
             .background,
@@ -240,7 +330,7 @@ mod tests {
         assert_eq!(
             ButtonResolvedStyle::from_theme(
                 &theme,
-                ButtonVariant::Standard,
+                ButtonVariant::STANDARD,
                 ButtonStyleState::Pressed
             )
             .background,
@@ -248,7 +338,7 @@ mod tests {
         );
         let disabled_style = ButtonResolvedStyle::from_theme(
             &theme,
-            ButtonVariant::Standard,
+            ButtonVariant::STANDARD,
             ButtonStyleState::Disabled,
         );
         assert_eq!(disabled_style.background, disabled);
@@ -261,17 +351,17 @@ mod tests {
 
         let idle = ButtonResolvedStyle::from_theme(
             &theme,
-            ButtonVariant::Standard,
+            ButtonVariant::STANDARD,
             ButtonStyleState::Idle,
         );
         let hovered = ButtonResolvedStyle::from_theme(
             &theme,
-            ButtonVariant::Standard,
+            ButtonVariant::STANDARD,
             ButtonStyleState::Hovered,
         );
         let pressed = ButtonResolvedStyle::from_theme(
             &theme,
-            ButtonVariant::Standard,
+            ButtonVariant::STANDARD,
             ButtonStyleState::Pressed,
         );
 
@@ -289,7 +379,7 @@ mod tests {
 
         let style = ButtonResolvedStyle::from_context(
             &scoped,
-            ButtonVariant::Standard,
+            ButtonVariant::STANDARD,
             ButtonStyleState::Hovered,
         );
 
@@ -305,7 +395,7 @@ mod tests {
 
         let style = ButtonResolvedStyle::from_component_context(
             &context,
-            ButtonVariant::Standard,
+            ButtonVariant::STANDARD,
             ButtonStyleState::Hovered,
         );
 
@@ -317,7 +407,7 @@ mod tests {
         let theme = ThemePack::adwaita();
         let disabled = ButtonResolvedStyle::from_theme(
             &theme,
-            ButtonVariant::Suggested,
+            ButtonVariant::SUGGESTED,
             ButtonStyleState::Disabled,
         );
 
@@ -331,10 +421,10 @@ mod tests {
         let theme = ThemePack::adwaita();
 
         assert_eq!(
-            ButtonResolvedStyle::from_theme(&theme, ButtonVariant::Primary, ButtonStyleState::Idle),
+            ButtonResolvedStyle::from_theme(&theme, ButtonVariant::PRIMARY, ButtonStyleState::Idle),
             ButtonResolvedStyle::from_theme(
                 &theme,
-                ButtonVariant::Suggested,
+                ButtonVariant::SUGGESTED,
                 ButtonStyleState::Idle
             )
         );

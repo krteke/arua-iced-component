@@ -61,6 +61,20 @@ define_theme_tokens! {
                 radius: Radius,
                 shadow: ShadowLayer,
             }
+            destructive {
+                bg: Color,
+                fg: Color,
+                border: Color,
+                hover { bg: Color }
+                pressed { bg: Color }
+                disabled {
+                    bg: Color,
+                    fg: Color,
+                }
+                focus { ring: Color }
+                radius: Radius,
+                shadow: ShadowLayer,
+            }
         }
     }
 }
@@ -75,6 +89,8 @@ pub type SurfaceRaisedTokens = ThemePackSurfaceRaised;
 pub type ButtonStandardTokens = ThemePackButtonStandard;
 /// Suggested-action button token group generated for [`ThemePack`].
 pub type ButtonSuggestedTokens = ThemePackButtonSuggested;
+/// Destructive-action button token group generated for [`ThemePack`].
+pub type ButtonDestructiveTokens = ThemePackButtonDestructive;
 /// Backward-compatible alias for suggested-action button tokens.
 pub type ButtonPrimaryTokens = ButtonSuggestedTokens;
 
@@ -161,6 +177,7 @@ mod tests {
         assert_eq!(theme.surface.raised.border, theme.surface.base.border);
         assert_eq!(theme.button.standard.bg, theme.surface.raised.bg);
         assert_eq!(theme.button.suggested.border, theme.button.suggested.bg);
+        assert_eq!(theme.button.destructive.border, theme.button.destructive.bg);
         assert_eq!(
             theme.button.suggested.disabled.fg,
             theme.button.standard.disabled.fg

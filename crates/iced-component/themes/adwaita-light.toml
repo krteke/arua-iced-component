@@ -36,11 +36,21 @@ description = "Muted Adwaita-like baseline for Aura Iced components."
 "button.suggested.disabled.fg" = "{button.standard.disabled.fg}"
 "button.suggested.focus.ring" = "{button.standard.focus.ring}"
 
+"button.destructive.bg" = "#e01b24"
+"button.destructive.fg" = "#ffffff"
+"button.destructive.border" = "{button.destructive.bg}"
+"button.destructive.hover.bg" = "#c01c28"
+"button.destructive.pressed.bg" = "#a51d2d"
+"button.destructive.disabled.bg" = "{button.suggested.disabled.bg}"
+"button.destructive.disabled.fg" = "{button.standard.disabled.fg}"
+"button.destructive.focus.ring" = "{button.standard.focus.ring}"
+
 [radii]
 "surface.base.radius" = "8px"
 "surface.raised.radius" = "{surface.base.radius}"
 "button.standard.radius" = "9px"
 "button.suggested.radius" = "{button.standard.radius}"
+"button.destructive.radius" = "{button.standard.radius}"
 
 [[shadows]]
 path = "surface.raised.shadow"
@@ -60,6 +70,14 @@ spread = "0px"
 
 [[shadows]]
 path = "button.suggested.shadow"
+color = "#00000024"
+offset_x = "0px"
+offset_y = "2px"
+blur = "10px"
+spread = "0px"
+
+[[shadows]]
+path = "button.destructive.shadow"
 color = "#00000024"
 offset_x = "0px"
 offset_y = "2px"

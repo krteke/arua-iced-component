@@ -78,19 +78,25 @@ impl AnimatedButton {
     /// Creates a standard animated button.
     #[must_use]
     pub fn standard(label: impl Into<String>) -> Self {
-        Self::new(label, ButtonVariant::Standard)
+        Self::new(label, ButtonVariant::STANDARD)
     }
 
     /// Creates a suggested-action animated button.
     #[must_use]
     pub fn suggested(label: impl Into<String>) -> Self {
-        Self::new(label, ButtonVariant::Suggested)
+        Self::new(label, ButtonVariant::SUGGESTED)
     }
 
     /// Creates a suggested-action animated button.
     #[must_use]
     pub fn primary(label: impl Into<String>) -> Self {
         Self::suggested(label)
+    }
+
+    /// Creates a destructive-action animated button.
+    #[must_use]
+    pub fn destructive(label: impl Into<String>) -> Self {
+        Self::new(label, ButtonVariant::DESTRUCTIVE)
     }
 
     /// Registers the button motion handle in the application runtime.
@@ -292,7 +298,7 @@ mod tests {
         assert!(changed);
         assert_eq!(runtime.motion_count(), 1);
         assert_approx_eq!(f32, button.motion_value(&runtime).unwrap().shadow_y, 1.2);
-        assert_eq!(button.variant(), ButtonVariant::Suggested);
+        assert_eq!(button.variant(), ButtonVariant::SUGGESTED);
     }
 
     #[test]
@@ -397,7 +403,7 @@ mod tests {
 
         let snapshot = button.snapshot(&runtime, &context).unwrap();
 
-        assert_eq!(snapshot.variant, ButtonVariant::Suggested);
+        assert_eq!(snapshot.variant, ButtonVariant::SUGGESTED);
         assert_eq!(snapshot.style_state, ButtonStyleState::Pressed);
         assert_eq!(
             snapshot.style.background,

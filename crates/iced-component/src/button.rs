@@ -11,4 +11,6 @@ pub use animated::{AnimatedButton, AnimatedButtonSnapshot, ButtonEvent, ButtonIn
 #[cfg(feature = "iced")]
 pub use iced::{AnimatedButtonView, button_style};
 pub use motion::ButtonMotion;
-pub use style::{ButtonResolvedStyle, ButtonStyleState, ButtonVariant};
+pub use style::{
+    ButtonAppearance, ButtonResolvedStyle, ButtonRole, ButtonStyleState, ButtonVariant,
+};
