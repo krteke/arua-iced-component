@@ -81,10 +81,16 @@ impl AnimatedButton {
         Self::new(label, ButtonVariant::Standard)
     }
 
-    /// Creates a primary animated button.
+    /// Creates a suggested-action animated button.
+    #[must_use]
+    pub fn suggested(label: impl Into<String>) -> Self {
+        Self::new(label, ButtonVariant::Suggested)
+    }
+
+    /// Creates a suggested-action animated button.
     #[must_use]
     pub fn primary(label: impl Into<String>) -> Self {
-        Self::new(label, ButtonVariant::Primary)
+        Self::suggested(label)
     }
 
     /// Registers the button motion handle in the application runtime.
@@ -275,7 +281,7 @@ mod tests {
     fn registered_hover_transitions_runtime_motion() {
         let mut runtime = MotionRuntime::new();
         let context = ComponentContext::current();
-        let mut button = AnimatedButton::primary("Save");
+        let mut button = AnimatedButton::suggested("Save");
 
         button.register(&mut runtime, &context);
         let changed = button
@@ -286,7 +292,7 @@ mod tests {
         assert!(changed);
         assert_eq!(runtime.motion_count(), 1);
         assert_approx_eq!(f32, button.motion_value(&runtime).unwrap().shadow_y, 1.2);
-        assert_eq!(button.variant(), ButtonVariant::Primary);
+        assert_eq!(button.variant(), ButtonVariant::Suggested);
     }
 
     #[test]
@@ -381,7 +387,7 @@ mod tests {
     fn snapshot_combines_style_and_motion() {
         let mut runtime = MotionRuntime::new();
         let context = ComponentContext::current();
-        let mut button = AnimatedButton::primary("Save");
+        let mut button = AnimatedButton::suggested("Save");
 
         button.register(&mut runtime, &context);
         button
@@ -391,11 +397,11 @@ mod tests {
 
         let snapshot = button.snapshot(&runtime, &context).unwrap();
 
-        assert_eq!(snapshot.variant, ButtonVariant::Primary);
+        assert_eq!(snapshot.variant, ButtonVariant::Suggested);
         assert_eq!(snapshot.style_state, ButtonStyleState::Pressed);
         assert_eq!(
             snapshot.style.background,
-            context.theme().theme().button.primary.pressed.bg
+            context.theme().theme().button.suggested.pressed.bg
         );
         assert_approx_eq!(f32, snapshot.motion.scale, 0.98);
     }

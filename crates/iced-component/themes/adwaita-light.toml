@@ -27,20 +27,20 @@ description = "Muted Adwaita-like baseline for Aura Iced components."
 "button.standard.disabled.fg" = "#5e5c6499"
 "button.standard.focus.ring" = "#1c71d8"
 
-"button.primary.bg" = "#3584e4"
-"button.primary.fg" = "#ffffff"
-"button.primary.border" = "{button.primary.bg}"
-"button.primary.hover.bg" = "{button.standard.focus.ring}"
-"button.primary.pressed.bg" = "#1a5fb4"
-"button.primary.disabled.bg" = "#d7d7d7"
-"button.primary.disabled.fg" = "{button.standard.disabled.fg}"
-"button.primary.focus.ring" = "{button.standard.focus.ring}"
+"button.suggested.bg" = "#3584e4"
+"button.suggested.fg" = "#ffffff"
+"button.suggested.border" = "{button.suggested.bg}"
+"button.suggested.hover.bg" = "{button.standard.focus.ring}"
+"button.suggested.pressed.bg" = "#1a5fb4"
+"button.suggested.disabled.bg" = "#d7d7d7"
+"button.suggested.disabled.fg" = "{button.standard.disabled.fg}"
+"button.suggested.focus.ring" = "{button.standard.focus.ring}"
 
 [radii]
 "surface.base.radius" = "8px"
 "surface.raised.radius" = "{surface.base.radius}"
 "button.standard.radius" = "9px"
-"button.primary.radius" = "{button.standard.radius}"
+"button.suggested.radius" = "{button.standard.radius}"
 
 [[shadows]]
 path = "surface.raised.shadow"
@@ -59,7 +59,7 @@ blur = "10px"
 spread = "0px"
 
 [[shadows]]
-path = "button.primary.shadow"
+path = "button.suggested.shadow"
 color = "#00000024"
 offset_x = "0px"
 offset_y = "2px"

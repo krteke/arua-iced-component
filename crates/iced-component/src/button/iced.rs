@@ -247,7 +247,7 @@ mod tests {
 
         let runtime = MotionRuntime::new();
         let context = ComponentContext::current();
-        let button = AnimatedButton::primary("Save");
+        let button = AnimatedButton::suggested("Save");
         let view = button
             .view(&runtime, &context)
             .on_press_event(Action::Save, Message::Button);
@@ -264,7 +264,7 @@ mod tests {
 
         let mut runtime = MotionRuntime::new();
         let context = ComponentContext::current();
-        let mut button = AnimatedButton::primary("Save");
+        let mut button = AnimatedButton::suggested("Save");
 
         button
             .update(ButtonInteraction::SetDisabled(true), &mut runtime)
@@ -281,7 +281,7 @@ mod tests {
 
         let runtime = MotionRuntime::new();
         let context = ComponentContext::current();
-        let button = AnimatedButton::primary("Save");
+        let button = AnimatedButton::suggested("Save");
 
         let view = button.view(&runtime, &context);
         let _element: Element<'_, Message> = view.into();

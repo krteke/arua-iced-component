@@ -47,7 +47,7 @@ define_theme_tokens! {
                 radius: Radius,
                 shadow: ShadowLayer,
             }
-            primary {
+            suggested {
                 bg: Color,
                 fg: Color,
                 border: Color,
@@ -73,8 +73,10 @@ pub type SurfaceTokens = ThemePackSurfaceBase;
 pub type SurfaceRaisedTokens = ThemePackSurfaceRaised;
 /// Standard button token group generated for [`ThemePack`].
 pub type ButtonStandardTokens = ThemePackButtonStandard;
-/// Primary button token group generated for [`ThemePack`].
-pub type ButtonPrimaryTokens = ThemePackButtonPrimary;
+/// Suggested-action button token group generated for [`ThemePack`].
+pub type ButtonSuggestedTokens = ThemePackButtonSuggested;
+/// Backward-compatible alias for suggested-action button tokens.
+pub type ButtonPrimaryTokens = ButtonSuggestedTokens;
 
 thread_local! {
     static CURRENT_THEME: RefCell<ThemePack> = RefCell::new(ThemePack::adwaita());
@@ -124,7 +126,7 @@ mod tests {
     #[test]
     fn adwaita_baseline_uses_muted_blue_accent() {
         let theme = ThemePack::adwaita();
-        let accent = theme.button.primary.bg;
+        let accent = theme.button.suggested.bg;
 
         assert!(accent.blue() > accent.red());
         assert!(accent.red() < 96);
@@ -143,11 +145,11 @@ mod tests {
     fn thread_local_theme_can_be_replaced() {
         let accent = Color::new(26, 95, 180);
         let mut theme = ThemePack::adwaita();
-        theme.button.primary.bg = accent;
+        theme.button.suggested.bg = accent;
 
         set_theme_pack(theme);
 
-        with_theme_pack(|current| assert_eq!(current.button.primary.bg, accent));
+        with_theme_pack(|current| assert_eq!(current.button.suggested.bg, accent));
         set_theme_pack(ThemePack::adwaita());
     }
 
@@ -158,9 +160,9 @@ mod tests {
         assert_eq!(theme.app.bg, "#f6f5f4".parse::<Color>().unwrap());
         assert_eq!(theme.surface.raised.border, theme.surface.base.border);
         assert_eq!(theme.button.standard.bg, theme.surface.raised.bg);
-        assert_eq!(theme.button.primary.border, theme.button.primary.bg);
+        assert_eq!(theme.button.suggested.border, theme.button.suggested.bg);
         assert_eq!(
-            theme.button.primary.disabled.fg,
+            theme.button.suggested.disabled.fg,
             theme.button.standard.disabled.fg
         );
     }

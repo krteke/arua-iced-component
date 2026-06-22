@@ -8,8 +8,9 @@ mod surface;
 pub use context::{ThemeContext, with_theme_context};
 pub use error::ThemeLoadError;
 pub use pack::{
-    ADWAITA_LIGHT_TOML, AppTokens, ButtonPrimaryTokens, ButtonStandardTokens, SurfaceRaisedTokens,
-    SurfaceTokens, ThemePack, set_theme_pack, with_theme_pack,
+    ADWAITA_LIGHT_TOML, AppTokens, ButtonPrimaryTokens, ButtonStandardTokens,
+    ButtonSuggestedTokens, SurfaceRaisedTokens, SurfaceTokens, ThemePack, set_theme_pack,
+    with_theme_pack,
 };
 pub use spectrum_theme::{
     Color, ColorParseError, FontStyle, FontStyleParseError, FontWeight, FontWeightParseError,

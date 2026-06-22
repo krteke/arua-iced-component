@@ -74,11 +74,11 @@ mod tests {
     fn current_context_reads_thread_local_theme() {
         let accent = Color::new(26, 95, 180);
         let mut theme = ThemePack::adwaita();
-        theme.button.primary.bg = accent;
+        theme.button.suggested.bg = accent;
 
         set_theme_pack(theme);
 
-        with_theme_context(|context| assert_eq!(context.theme().button.primary.bg, accent));
+        with_theme_context(|context| assert_eq!(context.theme().button.suggested.bg, accent));
         set_theme_pack(ThemePack::adwaita());
     }
 

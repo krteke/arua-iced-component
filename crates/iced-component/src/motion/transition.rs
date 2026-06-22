@@ -1,5 +1,4 @@
-use aura_anim_core::timing::{Delay, Direction, IterationCount};
-use iced::animation::Easing;
+use aura_anim_core::timing::{Delay, Direction, Easing, IterationCount};
 
 use crate::motion::MotionSpeed;
 

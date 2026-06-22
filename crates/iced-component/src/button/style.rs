@@ -2,7 +2,7 @@ use spectrum_theme::{Color, Radius, ShadowLayer};
 
 use crate::{
     component::ComponentContext,
-    theme::{ButtonPrimaryTokens, ButtonStandardTokens, ThemeContext, ThemePack},
+    theme::{ButtonStandardTokens, ButtonSuggestedTokens, ThemeContext, ThemePack},
 };
 
 /// Visual role for resolving button theme tokens.
@@ -10,7 +10,9 @@ use crate::{
 pub enum ButtonVariant {
     /// Neutral action using standard button tokens.
     Standard,
-    /// Primary action using primary button tokens.
+    /// Recommended action using suggested button tokens.
+    Suggested,
+    /// Backward-compatible alias for [`ButtonVariant::Suggested`].
     Primary,
 }
 
@@ -50,7 +52,9 @@ impl ButtonResolvedStyle {
     pub fn from_theme(theme: &ThemePack, variant: ButtonVariant, state: ButtonStyleState) -> Self {
         match variant {
             ButtonVariant::Standard => Self::from_standard_tokens(&theme.button.standard, state),
-            ButtonVariant::Primary => Self::from_primary_tokens(&theme.button.primary, state),
+            ButtonVariant::Suggested | ButtonVariant::Primary => {
+                Self::from_suggested_tokens(&theme.button.suggested, state)
+            }
         }
     }
 
@@ -80,9 +84,9 @@ impl ButtonResolvedStyle {
         Self::from_tokens(tokens, state)
     }
 
-    /// Resolves final style from primary button tokens.
+    /// Resolves final style from suggested-action button tokens.
     #[must_use]
-    pub fn from_primary_tokens(tokens: &ButtonPrimaryTokens, state: ButtonStyleState) -> Self {
+    pub fn from_suggested_tokens(tokens: &ButtonSuggestedTokens, state: ButtonStyleState) -> Self {
         Self::from_tokens(tokens, state)
     }
 
@@ -156,7 +160,7 @@ macro_rules! impl_button_tokens {
 }
 
 impl_button_tokens!(ButtonStandardTokens);
-impl_button_tokens!(ButtonPrimaryTokens);
+impl_button_tokens!(ButtonSuggestedTokens);
 
 #[cfg(test)]
 mod tests {
@@ -184,14 +188,17 @@ mod tests {
     }
 
     #[test]
-    fn primary_button_uses_accent_tokens() {
+    fn suggested_button_uses_accent_tokens() {
         let theme = ThemePack::adwaita();
-        let style =
-            ButtonResolvedStyle::from_theme(&theme, ButtonVariant::Primary, ButtonStyleState::Idle);
+        let style = ButtonResolvedStyle::from_theme(
+            &theme,
+            ButtonVariant::Suggested,
+            ButtonStyleState::Idle,
+        );
 
-        assert_eq!(style.background, theme.button.primary.bg);
-        assert_eq!(style.foreground, theme.button.primary.fg);
-        assert_eq!(style.border, theme.button.primary.border);
+        assert_eq!(style.background, theme.button.suggested.bg);
+        assert_eq!(style.foreground, theme.button.suggested.fg);
+        assert_eq!(style.border, theme.button.suggested.border);
     }
 
     #[test]
@@ -310,12 +317,26 @@ mod tests {
         let theme = ThemePack::adwaita();
         let disabled = ButtonResolvedStyle::from_theme(
             &theme,
-            ButtonVariant::Primary,
+            ButtonVariant::Suggested,
             ButtonStyleState::Disabled,
         );
 
-        assert_eq!(disabled.background, theme.button.primary.disabled.bg);
-        assert_eq!(disabled.foreground, theme.button.primary.disabled.fg);
-        assert_eq!(disabled.radius, theme.button.primary.radius);
+        assert_eq!(disabled.background, theme.button.suggested.disabled.bg);
+        assert_eq!(disabled.foreground, theme.button.suggested.disabled.fg);
+        assert_eq!(disabled.radius, theme.button.suggested.radius);
+    }
+
+    #[test]
+    fn primary_variant_is_a_compatibility_alias_for_suggested() {
+        let theme = ThemePack::adwaita();
+
+        assert_eq!(
+            ButtonResolvedStyle::from_theme(&theme, ButtonVariant::Primary, ButtonStyleState::Idle),
+            ButtonResolvedStyle::from_theme(
+                &theme,
+                ButtonVariant::Suggested,
+                ButtonStyleState::Idle
+            )
+        );
     }
 }

@@ -51,7 +51,7 @@ impl Demo {
         let (preferences, reduce_motion) = MotionPreferences::new(false);
         let mut runtime = MotionRuntime::new();
         let context = ComponentContext::current().with_motion_preferences(preferences);
-        let mut save_button = AnimatedButton::primary("Save");
+        let mut save_button = AnimatedButton::suggested("Save");
         let mut reset_button = AnimatedButton::standard("Reset");
 
         save_button.register(&mut runtime, &context);
