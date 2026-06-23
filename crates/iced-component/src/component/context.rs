@@ -99,9 +99,13 @@ mod tests {
     fn scoped_theme_keeps_motion_inputs() {
         let context = ComponentContext::current();
         let scoped_bg = Color::new(221, 238, 255);
-        let scoped = context.scoped_theme(|theme| theme.button.standard.hover.bg = scoped_bg);
+        let scoped =
+            context.scoped_theme(|theme| theme.button.standard.filled.hover.bg = scoped_bg);
 
-        assert_eq!(scoped.theme().theme().button.standard.hover.bg, scoped_bg);
+        assert_eq!(
+            scoped.theme().theme().button.standard.filled.hover.bg,
+            scoped_bg
+        );
         assert_eq!(scoped.motion_tokens(), context.motion_tokens());
         assert!(
             scoped

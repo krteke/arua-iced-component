@@ -11,8 +11,8 @@ mod style;
 pub use animated::{AnimatedButton, AnimatedButtonSnapshot, ButtonEvent, ButtonInteraction};
 #[cfg(feature = "iced")]
 pub use iced::{AnimatedButtonView, ButtonContent, button_style};
-pub use icon::AnimatedIconButton;
+pub use icon::{AnimatedIconButton, IconButtonSize, IconSource};
 pub use motion::ButtonMotion;
 pub use style::{
-    ButtonAppearance, ButtonResolvedStyle, ButtonRole, ButtonStyleState, ButtonVariant,
+    ButtonResolvedStyle, ButtonRole, ButtonShape, ButtonStyleState, ButtonTreatment, ButtonVariant,
 };

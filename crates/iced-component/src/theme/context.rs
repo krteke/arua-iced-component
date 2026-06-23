@@ -74,11 +74,13 @@ mod tests {
     fn current_context_reads_thread_local_theme() {
         let accent = Color::new(26, 95, 180);
         let mut theme = ThemePack::adwaita();
-        theme.button.suggested.bg = accent;
+        theme.button.suggested.filled.idle.bg = accent;
 
         set_theme_pack(theme);
 
-        with_theme_context(|context| assert_eq!(context.theme().button.suggested.bg, accent));
+        with_theme_context(|context| {
+            assert_eq!(context.theme().button.suggested.filled.idle.bg, accent);
+        });
         set_theme_pack(ThemePack::adwaita());
     }
 
@@ -86,9 +88,9 @@ mod tests {
     fn scoped_context_does_not_mutate_parent() {
         let parent = ThemeContext::from_theme(&ThemePack::adwaita());
         let scoped_bg = Color::new(221, 238, 255);
-        let scoped = parent.scoped(|theme| theme.button.standard.hover.bg = scoped_bg);
+        let scoped = parent.scoped(|theme| theme.button.standard.filled.hover.bg = scoped_bg);
 
-        assert_ne!(parent.theme().button.standard.hover.bg, scoped_bg);
-        assert_eq!(scoped.theme().button.standard.hover.bg, scoped_bg);
+        assert_ne!(parent.theme().button.standard.filled.hover.bg, scoped_bg);
+        assert_eq!(scoped.theme().button.standard.filled.hover.bg, scoped_bg);
     }
 }

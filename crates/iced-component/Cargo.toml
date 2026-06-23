@@ -20,7 +20,7 @@ thiserror.workspace = true
 float-cmp.workspace = true
 
 [features]
-iced = ["dep:iced", "spectrum-theme/iced"]
+iced = ["dep:iced", "iced/svg", "spectrum-theme/iced"]
 
 [[example]]
 name = "button_demo"

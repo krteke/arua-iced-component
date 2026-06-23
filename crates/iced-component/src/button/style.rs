@@ -1,10 +1,12 @@
-use spectrum_theme::{Color, Length, LengthUnit, Radius, ShadowLayer};
+use spectrum_theme::{Color, Length, Radius, ShadowLayer};
 
 use crate::{
     component::ComponentContext,
     theme::{
-        ButtonDestructiveTokens, ButtonStandardTokens, ButtonSuggestedTokens, ThemeContext,
-        ThemePack,
+        ButtonDestructiveFilledTokens, ButtonDestructiveFlatTokens, ButtonDestructiveRaisedTokens,
+        ButtonStandardFilledTokens, ButtonStandardFlatTokens, ButtonStandardRaisedTokens,
+        ButtonSuggestedFilledTokens, ButtonSuggestedFlatTokens, ButtonSuggestedRaisedTokens,
+        ThemeContext, ThemePack,
     },
 };
 
@@ -19,18 +21,25 @@ pub enum ButtonRole {
     Destructive,
 }
 
-/// Visual treatment for a button.
+/// Visual emphasis/treatment for a button.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum ButtonAppearance {
-    /// Theme default treatment for the role.
-    Default,
+pub enum ButtonTreatment {
+    /// Filled button surface.
+    Filled,
     /// Minimal treatment for low-emphasis buttons.
     Flat,
     /// Explicit raised treatment.
     Raised,
-    /// Fully rounded capsule treatment.
+}
+
+/// Button outline shape.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum ButtonShape {
+    /// Rounded rectangle shape.
+    Rounded,
+    /// Fully rounded capsule shape.
     Pill,
-    /// Equal-width circular icon-style treatment.
+    /// Equal-width circular icon-style shape.
     Circular,
 }
 
@@ -39,30 +48,55 @@ pub enum ButtonAppearance {
 pub struct ButtonVariant {
     /// Semantic role.
     pub role: ButtonRole,
-    /// Visual treatment.
-    pub appearance: ButtonAppearance,
+    /// Visual emphasis/treatment.
+    pub treatment: ButtonTreatment,
+    /// Button outline shape.
+    pub shape: ButtonShape,
 }
 
 impl ButtonVariant {
     /// Neutral default button.
-    pub const STANDARD: Self = Self::new(ButtonRole::Standard, ButtonAppearance::Default);
+    pub const STANDARD: Self = Self::new(
+        ButtonRole::Standard,
+        ButtonTreatment::Filled,
+        ButtonShape::Rounded,
+    );
     /// Recommended-action default button.
-    pub const SUGGESTED: Self = Self::new(ButtonRole::Suggested, ButtonAppearance::Default);
+    pub const SUGGESTED: Self = Self::new(
+        ButtonRole::Suggested,
+        ButtonTreatment::Filled,
+        ButtonShape::Rounded,
+    );
     /// Backward-compatible alias for [`ButtonVariant::SUGGESTED`].
     pub const PRIMARY: Self = Self::SUGGESTED;
     /// Destructive-action default button.
-    pub const DESTRUCTIVE: Self = Self::new(ButtonRole::Destructive, ButtonAppearance::Default);
+    pub const DESTRUCTIVE: Self = Self::new(
+        ButtonRole::Destructive,
+        ButtonTreatment::Filled,
+        ButtonShape::Rounded,
+    );
 
-    /// Creates a button variant from role and appearance.
+    /// Creates a button variant from role, treatment, and shape.
     #[must_use]
-    pub const fn new(role: ButtonRole, appearance: ButtonAppearance) -> Self {
-        Self { role, appearance }
+    pub const fn new(role: ButtonRole, treatment: ButtonTreatment, shape: ButtonShape) -> Self {
+        Self {
+            role,
+            treatment,
+            shape,
+        }
     }
 
-    /// Returns this variant with a different visual appearance.
+    /// Returns this variant with a different visual treatment.
     #[must_use]
-    pub const fn with_appearance(mut self, appearance: ButtonAppearance) -> Self {
-        self.appearance = appearance;
+    pub const fn with_treatment(mut self, treatment: ButtonTreatment) -> Self {
+        self.treatment = treatment;
+        self
+    }
+
+    /// Returns this variant with a different outline shape.
+    #[must_use]
+    pub const fn with_shape(mut self, shape: ButtonShape) -> Self {
+        self.shape = shape;
         self
     }
 
@@ -71,6 +105,60 @@ impl ButtonVariant {
     pub const fn with_role(mut self, role: ButtonRole) -> Self {
         self.role = role;
         self
+    }
+
+    /// Returns this variant as a standard action.
+    #[must_use]
+    pub const fn set_standard(self) -> Self {
+        self.with_role(ButtonRole::Standard)
+    }
+
+    /// Returns this variant as a suggested action.
+    #[must_use]
+    pub const fn set_suggested(self) -> Self {
+        self.with_role(ButtonRole::Suggested)
+    }
+
+    /// Returns this variant as a destructive action.
+    #[must_use]
+    pub const fn set_destructive(self) -> Self {
+        self.with_role(ButtonRole::Destructive)
+    }
+
+    /// Returns this variant with filled treatment.
+    #[must_use]
+    pub const fn set_filled(self) -> Self {
+        self.with_treatment(ButtonTreatment::Filled)
+    }
+
+    /// Returns this variant with flat treatment.
+    #[must_use]
+    pub const fn set_flat(self) -> Self {
+        self.with_treatment(ButtonTreatment::Flat)
+    }
+
+    /// Returns this variant with raised treatment.
+    #[must_use]
+    pub const fn set_raised(self) -> Self {
+        self.with_treatment(ButtonTreatment::Raised)
+    }
+
+    /// Returns this variant with rounded shape.
+    #[must_use]
+    pub const fn set_rounded(self) -> Self {
+        self.with_shape(ButtonShape::Rounded)
+    }
+
+    /// Returns this variant with pill shape.
+    #[must_use]
+    pub const fn set_pill(self) -> Self {
+        self.with_shape(ButtonShape::Pill)
+    }
+
+    /// Returns this variant with circular shape.
+    #[must_use]
+    pub const fn set_circular(self) -> Self {
+        self.with_shape(ButtonShape::Circular)
     }
 }
 
@@ -96,6 +184,8 @@ pub struct ButtonResolvedStyle {
     pub foreground: Color,
     /// Final border color.
     pub border: Color,
+    /// Button border width.
+    pub border_width: Length,
     /// Focus ring color.
     pub focus_ring: Color,
     /// Button corner radius.
@@ -108,15 +198,42 @@ impl ButtonResolvedStyle {
     /// Resolves final button style from generated theme tokens.
     #[must_use]
     pub fn from_theme(theme: &ThemePack, variant: ButtonVariant, state: ButtonStyleState) -> Self {
-        let style = match variant.role {
-            ButtonRole::Standard => Self::from_standard_tokens(&theme.button.standard, state),
-            ButtonRole::Suggested => Self::from_suggested_tokens(&theme.button.suggested, state),
-            ButtonRole::Destructive => {
-                Self::from_destructive_tokens(&theme.button.destructive, state)
+        let mut style = match (variant.role, variant.treatment) {
+            (ButtonRole::Standard, ButtonTreatment::Filled) => {
+                Self::from_tokens(&theme.button.standard.filled, state)
+            }
+            (ButtonRole::Standard, ButtonTreatment::Flat) => {
+                Self::from_tokens(&theme.button.standard.flat, state)
+            }
+            (ButtonRole::Standard, ButtonTreatment::Raised) => {
+                Self::from_tokens(&theme.button.standard.raised, state)
+            }
+            (ButtonRole::Suggested, ButtonTreatment::Filled) => {
+                Self::from_tokens(&theme.button.suggested.filled, state)
+            }
+            (ButtonRole::Suggested, ButtonTreatment::Flat) => {
+                Self::from_tokens(&theme.button.suggested.flat, state)
+            }
+            (ButtonRole::Suggested, ButtonTreatment::Raised) => {
+                Self::from_tokens(&theme.button.suggested.raised, state)
+            }
+            (ButtonRole::Destructive, ButtonTreatment::Filled) => {
+                Self::from_tokens(&theme.button.destructive.filled, state)
+            }
+            (ButtonRole::Destructive, ButtonTreatment::Flat) => {
+                Self::from_tokens(&theme.button.destructive.flat, state)
+            }
+            (ButtonRole::Destructive, ButtonTreatment::Raised) => {
+                Self::from_tokens(&theme.button.destructive.raised, state)
             }
         };
-
-        style.apply_appearance(variant.appearance)
+        style.radius = match variant.shape {
+            ButtonShape::Rounded => theme.button.shape.rounded.radius,
+            ButtonShape::Pill => theme.button.shape.pill.radius,
+            ButtonShape::Circular => theme.button.shape.circular.radius,
+        };
+        style.border_width = theme.control.border.width;
+        style
     }
 
     /// Resolves final button style from a theme context.
@@ -139,124 +256,75 @@ impl ButtonResolvedStyle {
         Self::from_context(context.theme(), variant, state)
     }
 
-    /// Resolves final style from standard button tokens.
+    /// Resolves final style from standard filled button tokens.
     #[must_use]
-    pub fn from_standard_tokens(tokens: &ButtonStandardTokens, state: ButtonStyleState) -> Self {
+    pub fn from_standard_tokens(
+        tokens: &ButtonStandardFilledTokens,
+        state: ButtonStyleState,
+    ) -> Self {
         Self::from_tokens(tokens, state)
     }
 
-    /// Resolves final style from suggested-action button tokens.
+    /// Resolves final style from suggested filled button tokens.
     #[must_use]
-    pub fn from_suggested_tokens(tokens: &ButtonSuggestedTokens, state: ButtonStyleState) -> Self {
+    pub fn from_suggested_tokens(
+        tokens: &ButtonSuggestedFilledTokens,
+        state: ButtonStyleState,
+    ) -> Self {
         Self::from_tokens(tokens, state)
     }
 
-    /// Resolves final style from destructive-action button tokens.
+    /// Resolves final style from destructive filled button tokens.
     #[must_use]
     pub fn from_destructive_tokens(
-        tokens: &ButtonDestructiveTokens,
+        tokens: &ButtonDestructiveFilledTokens,
         state: ButtonStyleState,
     ) -> Self {
         Self::from_tokens(tokens, state)
     }
 
     fn from_tokens(tokens: &impl ButtonTokens, state: ButtonStyleState) -> Self {
-        let (background, foreground) = match state {
-            ButtonStyleState::Idle => (tokens.bg(), tokens.fg()),
-            ButtonStyleState::Hovered => (tokens.hover_bg(), tokens.fg()),
-            ButtonStyleState::Pressed => (tokens.pressed_bg(), tokens.fg()),
-            ButtonStyleState::Disabled => (tokens.disabled_bg(), tokens.disabled_fg()),
-        };
+        let (background, foreground, border) = tokens.colors(state);
 
         Self {
             background,
             foreground,
-            border: tokens.border(),
+            border,
+            border_width: "0px"
+                .parse()
+                .expect("zero length is a valid placeholder before theme resolution"),
             focus_ring: tokens.focus_ring(),
-            radius: tokens.radius(),
+            radius: "0px"
+                .parse()
+                .expect("zero radius is a valid placeholder before shape resolution"),
             shadow: tokens.shadow(),
         }
     }
-
-    fn apply_appearance(mut self, appearance: ButtonAppearance) -> Self {
-        match appearance {
-            ButtonAppearance::Flat => {
-                self.background = transparent(self.background);
-                self.border = transparent(self.border);
-                self.shadow = transparent_shadow(self.shadow);
-                self
-            }
-            ButtonAppearance::Pill | ButtonAppearance::Circular => {
-                self.radius = capsule_radius();
-                self
-            }
-            ButtonAppearance::Default | ButtonAppearance::Raised => self,
-        }
-    }
-}
-
-fn capsule_radius() -> Radius {
-    Radius::new(Length::new(999.0, LengthUnit::Px).expect("finite positive px length is valid"))
-        .expect("positive length is a valid radius")
-}
-
-fn transparent(color: Color) -> Color {
-    Color::new_rgba(color.red(), color.green(), color.blue(), 0)
-}
-
-fn transparent_shadow(shadow: ShadowLayer) -> ShadowLayer {
-    ShadowLayer::new(
-        transparent(shadow.color()),
-        shadow.offset_x(),
-        shadow.offset_y(),
-        shadow.blur(),
-        shadow.spread(),
-    )
-    .expect("changing only shadow color alpha preserves a valid shadow")
 }
 
 trait ButtonTokens {
-    fn bg(&self) -> Color;
-    fn fg(&self) -> Color;
-    fn border(&self) -> Color;
-    fn hover_bg(&self) -> Color;
-    fn pressed_bg(&self) -> Color;
-    fn disabled_bg(&self) -> Color;
-    fn disabled_fg(&self) -> Color;
+    fn colors(&self, state: ButtonStyleState) -> (Color, Color, Color);
     fn focus_ring(&self) -> Color;
-    fn radius(&self) -> Radius;
     fn shadow(&self) -> ShadowLayer;
 }
 
 macro_rules! impl_button_tokens {
     ($tokens:ty) => {
         impl ButtonTokens for $tokens {
-            fn bg(&self) -> Color {
-                self.bg
-            }
-            fn fg(&self) -> Color {
-                self.fg
-            }
-            fn border(&self) -> Color {
-                self.border
-            }
-            fn hover_bg(&self) -> Color {
-                self.hover.bg
-            }
-            fn pressed_bg(&self) -> Color {
-                self.pressed.bg
-            }
-            fn disabled_bg(&self) -> Color {
-                self.disabled.bg
-            }
-            fn disabled_fg(&self) -> Color {
-                self.disabled.fg
+            fn colors(&self, state: ButtonStyleState) -> (Color, Color, Color) {
+                match state {
+                    ButtonStyleState::Idle => (self.idle.bg, self.idle.fg, self.idle.border),
+                    ButtonStyleState::Hovered => (self.hover.bg, self.hover.fg, self.hover.border),
+                    ButtonStyleState::Pressed => {
+                        (self.pressed.bg, self.pressed.fg, self.pressed.border)
+                    }
+                    ButtonStyleState::Disabled => {
+                        (self.disabled.bg, self.disabled.fg, self.disabled.border)
+                    }
+                }
             }
             fn focus_ring(&self) -> Color {
                 self.focus.ring
-            }
-            fn radius(&self) -> Radius {
-                self.radius
             }
             fn shadow(&self) -> ShadowLayer {
                 self.shadow
@@ -265,9 +333,15 @@ macro_rules! impl_button_tokens {
     };
 }
 
-impl_button_tokens!(ButtonStandardTokens);
-impl_button_tokens!(ButtonSuggestedTokens);
-impl_button_tokens!(ButtonDestructiveTokens);
+impl_button_tokens!(ButtonStandardFilledTokens);
+impl_button_tokens!(ButtonStandardFlatTokens);
+impl_button_tokens!(ButtonStandardRaisedTokens);
+impl_button_tokens!(ButtonSuggestedFilledTokens);
+impl_button_tokens!(ButtonSuggestedFlatTokens);
+impl_button_tokens!(ButtonSuggestedRaisedTokens);
+impl_button_tokens!(ButtonDestructiveFilledTokens);
+impl_button_tokens!(ButtonDestructiveFlatTokens);
+impl_button_tokens!(ButtonDestructiveRaisedTokens);
 
 #[cfg(test)]
 mod tests {
@@ -279,7 +353,8 @@ mod tests {
     };
 
     use super::{
-        ButtonAppearance, ButtonResolvedStyle, ButtonRole, ButtonStyleState, ButtonVariant,
+        ButtonResolvedStyle, ButtonRole, ButtonShape, ButtonStyleState, ButtonTreatment,
+        ButtonVariant,
     };
 
     #[test]
@@ -291,9 +366,10 @@ mod tests {
             ButtonStyleState::Idle,
         );
 
-        assert_eq!(style.background, theme.button.standard.bg);
-        assert_eq!(style.foreground, theme.button.standard.fg);
-        assert_eq!(style.border, theme.button.standard.border);
+        assert_eq!(style.background, theme.button.standard.filled.idle.bg);
+        assert_eq!(style.foreground, theme.button.standard.filled.idle.fg);
+        assert_eq!(style.border, theme.button.standard.filled.idle.border);
+        assert_eq!(style.border_width, theme.control.border.width);
     }
 
     #[test]
@@ -305,9 +381,9 @@ mod tests {
             ButtonStyleState::Idle,
         );
 
-        assert_eq!(style.background, theme.button.suggested.bg);
-        assert_eq!(style.foreground, theme.button.suggested.fg);
-        assert_eq!(style.border, theme.button.suggested.border);
+        assert_eq!(style.background, theme.button.suggested.filled.idle.bg);
+        assert_eq!(style.foreground, theme.button.suggested.filled.idle.fg);
+        assert_eq!(style.border, theme.button.suggested.filled.idle.border);
     }
 
     #[test]
@@ -319,56 +395,92 @@ mod tests {
             ButtonStyleState::Idle,
         );
 
-        assert_eq!(style.background, theme.button.destructive.bg);
-        assert_eq!(style.foreground, theme.button.destructive.fg);
-        assert_eq!(style.border, theme.button.destructive.border);
+        assert_eq!(style.background, theme.button.destructive.filled.idle.bg);
+        assert_eq!(style.foreground, theme.button.destructive.filled.idle.fg);
+        assert_eq!(style.border, theme.button.destructive.filled.idle.border);
     }
 
     #[test]
-    fn button_variant_keeps_role_and_appearance_separate() {
-        let variant = ButtonVariant::new(ButtonRole::Suggested, ButtonAppearance::Flat);
+    fn button_variant_keeps_role_treatment_and_shape_separate() {
+        let variant = ButtonVariant::new(
+            ButtonRole::Suggested,
+            ButtonTreatment::Flat,
+            ButtonShape::Circular,
+        );
 
         assert_eq!(variant.role, ButtonRole::Suggested);
-        assert_eq!(variant.appearance, ButtonAppearance::Flat);
+        assert_eq!(variant.treatment, ButtonTreatment::Flat);
+        assert_eq!(variant.shape, ButtonShape::Circular);
         assert_eq!(
-            ButtonVariant::SUGGESTED.with_appearance(ButtonAppearance::Pill),
-            ButtonVariant::new(ButtonRole::Suggested, ButtonAppearance::Pill)
+            ButtonVariant::SUGGESTED.set_pill(),
+            ButtonVariant::new(
+                ButtonRole::Suggested,
+                ButtonTreatment::Filled,
+                ButtonShape::Pill
+            )
         );
     }
 
     #[test]
-    fn flat_appearance_removes_background_border_and_shadow() {
-        let theme = ThemePack::adwaita();
-        let variant = ButtonVariant::SUGGESTED.with_appearance(ButtonAppearance::Flat);
-        let style = ButtonResolvedStyle::from_theme(&theme, variant, ButtonStyleState::Idle);
+    fn variant_helpers_can_compose_role_treatment_and_shape() {
+        let variant = ButtonVariant::STANDARD
+            .set_suggested()
+            .set_flat()
+            .set_circular();
 
-        assert_eq!(style.foreground, theme.button.suggested.fg);
-        assert_eq!(style.background.alpha(), 0);
-        assert_eq!(style.border.alpha(), 0);
-        assert_eq!(style.shadow.color().alpha(), 0);
+        assert_eq!(variant.role, ButtonRole::Suggested);
+        assert_eq!(variant.treatment, ButtonTreatment::Flat);
+        assert_eq!(variant.shape, ButtonShape::Circular);
     }
 
     #[test]
-    fn raised_appearance_keeps_role_tokens() {
+    fn flat_treatment_uses_flat_theme_tokens() {
         let theme = ThemePack::adwaita();
-        let variant = ButtonVariant::SUGGESTED.with_appearance(ButtonAppearance::Raised);
+        let variant = ButtonVariant::SUGGESTED.set_flat();
         let style = ButtonResolvedStyle::from_theme(&theme, variant, ButtonStyleState::Idle);
 
-        assert_eq!(style.background, theme.button.suggested.bg);
-        assert_eq!(style.border, theme.button.suggested.border);
-        assert_eq!(style.shadow, theme.button.suggested.shadow);
+        assert_eq!(style.foreground, theme.button.suggested.flat.idle.fg);
+        assert_eq!(style.background, theme.button.suggested.flat.idle.bg);
+        assert_eq!(style.border, theme.button.suggested.flat.idle.border);
+        assert_eq!(style.shadow, theme.button.suggested.flat.shadow);
     }
 
     #[test]
-    fn pill_and_circular_appearance_use_capsule_radius() {
+    fn raised_treatment_uses_raised_theme_tokens() {
+        let theme = ThemePack::adwaita();
+        let variant = ButtonVariant::SUGGESTED.set_raised();
+        let style = ButtonResolvedStyle::from_theme(&theme, variant, ButtonStyleState::Idle);
+
+        assert_eq!(style.background, theme.button.suggested.raised.idle.bg);
+        assert_eq!(style.border, theme.button.suggested.raised.idle.border);
+        assert_eq!(style.shadow, theme.button.suggested.raised.shadow);
+    }
+
+    #[test]
+    fn pill_and_circular_shape_use_capsule_radius() {
         let theme = ThemePack::adwaita();
 
-        for appearance in [ButtonAppearance::Pill, ButtonAppearance::Circular] {
-            let variant = ButtonVariant::STANDARD.with_appearance(appearance);
+        for variant in [
+            ButtonVariant::STANDARD.set_pill(),
+            ButtonVariant::STANDARD.set_circular(),
+        ] {
             let style = ButtonResolvedStyle::from_theme(&theme, variant, ButtonStyleState::Idle);
 
-            assert!(style.radius.length().value() > theme.button.standard.radius.length().value());
+            assert!(
+                style.radius.length().value() > theme.button.shape.rounded.radius.length().value()
+            );
         }
+    }
+
+    #[test]
+    fn flat_circular_keeps_flat_treatment_and_capsule_shape() {
+        let theme = ThemePack::adwaita();
+        let variant = ButtonVariant::STANDARD.set_flat().set_circular();
+        let style = ButtonResolvedStyle::from_theme(&theme, variant, ButtonStyleState::Idle);
+
+        assert_eq!(style.background, theme.button.standard.flat.idle.bg);
+        assert_eq!(style.border, theme.button.standard.flat.idle.border);
+        assert!(style.radius.length().value() > theme.button.shape.rounded.radius.length().value());
     }
 
     #[test]
@@ -380,8 +492,8 @@ mod tests {
             ButtonStyleState::Idle,
         );
 
-        assert_eq!(style.radius, theme.button.standard.radius);
-        assert_eq!(style.shadow, theme.button.standard.shadow);
+        assert_eq!(style.radius, theme.button.shape.rounded.radius);
+        assert_eq!(style.shadow, theme.button.standard.filled.shadow);
         assert!(style.shadow.color().alpha() <= 48);
     }
 
@@ -393,10 +505,10 @@ mod tests {
         let disabled_foreground = Color::new_rgba(48, 48, 48, 128);
         let mut theme = ThemePack::adwaita();
 
-        theme.button.standard.hover.bg = hover;
-        theme.button.standard.pressed.bg = pressed;
-        theme.button.standard.disabled.bg = disabled;
-        theme.button.standard.disabled.fg = disabled_foreground;
+        theme.button.standard.filled.hover.bg = hover;
+        theme.button.standard.filled.pressed.bg = pressed;
+        theme.button.standard.filled.disabled.bg = disabled;
+        theme.button.standard.filled.disabled.fg = disabled_foreground;
 
         assert_eq!(
             ButtonResolvedStyle::from_theme(
@@ -445,17 +557,17 @@ mod tests {
             ButtonStyleState::Pressed,
         );
 
-        assert_eq!(idle.background, theme.button.standard.bg);
-        assert_eq!(hovered.background, theme.button.standard.hover.bg);
-        assert_eq!(pressed.background, theme.button.standard.pressed.bg);
-        assert_eq!(hovered.foreground, theme.button.standard.fg);
+        assert_eq!(idle.background, theme.button.standard.filled.idle.bg);
+        assert_eq!(hovered.background, theme.button.standard.filled.hover.bg);
+        assert_eq!(pressed.background, theme.button.standard.filled.pressed.bg);
+        assert_eq!(hovered.foreground, theme.button.standard.filled.hover.fg);
     }
 
     #[test]
     fn resolved_button_style_uses_scoped_context() {
         let context = ThemeContext::from_theme(&ThemePack::adwaita());
         let scoped_bg = Color::new(221, 238, 255);
-        let scoped = context.scoped(|theme| theme.button.standard.hover.bg = scoped_bg);
+        let scoped = context.scoped(|theme| theme.button.standard.filled.hover.bg = scoped_bg);
 
         let style = ButtonResolvedStyle::from_context(
             &scoped,
@@ -464,14 +576,14 @@ mod tests {
         );
 
         assert_eq!(style.background, scoped_bg);
-        assert_ne!(context.theme().button.standard.hover.bg, scoped_bg);
+        assert_ne!(context.theme().button.standard.filled.hover.bg, scoped_bg);
     }
 
     #[test]
     fn resolved_button_style_uses_component_context() {
         let scoped_bg = Color::new(221, 238, 255);
         let context = ComponentContext::current()
-            .scoped_theme(|theme| theme.button.standard.hover.bg = scoped_bg);
+            .scoped_theme(|theme| theme.button.standard.filled.hover.bg = scoped_bg);
 
         let style = ButtonResolvedStyle::from_component_context(
             &context,
@@ -491,9 +603,15 @@ mod tests {
             ButtonStyleState::Disabled,
         );
 
-        assert_eq!(disabled.background, theme.button.suggested.disabled.bg);
-        assert_eq!(disabled.foreground, theme.button.suggested.disabled.fg);
-        assert_eq!(disabled.radius, theme.button.suggested.radius);
+        assert_eq!(
+            disabled.background,
+            theme.button.suggested.filled.disabled.bg
+        );
+        assert_eq!(
+            disabled.foreground,
+            theme.button.suggested.filled.disabled.fg
+        );
+        assert_eq!(disabled.radius, theme.button.shape.rounded.radius);
     }
 
     #[test]

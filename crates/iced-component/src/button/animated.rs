@@ -2,8 +2,8 @@ use aura_anim_core::{MotionError, MotionRuntime, timing::Timing};
 
 use crate::{
     button::{
-        ButtonAppearance, ButtonResolvedStyle, ButtonRole, ButtonStyleState, ButtonVariant,
-        flags::ButtonFlags, motion::ButtonMotion,
+        ButtonResolvedStyle, ButtonRole, ButtonShape, ButtonStyleState, ButtonTreatment,
+        ButtonVariant, flags::ButtonFlags, motion::ButtonMotion,
     },
     component::{ComponentContext, ComponentMotion},
     motion::{Easing, MotionSpeed, MotionTransition},
@@ -113,29 +113,66 @@ impl AnimatedButton {
         self
     }
 
-    /// Returns this button with a different visual appearance.
+    /// Returns this button with a different visual treatment.
     #[must_use]
-    pub fn with_appearance(mut self, appearance: ButtonAppearance) -> Self {
-        self.variant = self.variant.with_appearance(appearance);
+    pub fn with_treatment(mut self, treatment: ButtonTreatment) -> Self {
+        self.variant = self.variant.with_treatment(treatment);
         self
+    }
+
+    /// Returns this button with a different outline shape.
+    #[must_use]
+    pub fn with_shape(mut self, shape: ButtonShape) -> Self {
+        self.variant = self.variant.with_shape(shape);
+        self
+    }
+
+    /// Returns this button as a standard action.
+    #[must_use]
+    pub fn as_standard(self) -> Self {
+        self.with_role(ButtonRole::Standard)
+    }
+
+    /// Returns this button as a suggested action.
+    #[must_use]
+    pub fn as_suggested(self) -> Self {
+        self.with_role(ButtonRole::Suggested)
+    }
+
+    /// Returns this button as a destructive action.
+    #[must_use]
+    pub fn as_destructive(self) -> Self {
+        self.with_role(ButtonRole::Destructive)
+    }
+
+    /// Returns this button with filled treatment.
+    #[must_use]
+    pub fn filled(self) -> Self {
+        self.with_treatment(ButtonTreatment::Filled)
+    }
+
+    /// Returns this button with rounded shape.
+    #[must_use]
+    pub fn rounded(self) -> Self {
+        self.with_shape(ButtonShape::Rounded)
     }
 
     /// Returns this button with minimal low-emphasis styling.
     #[must_use]
     pub fn flat(self) -> Self {
-        self.with_appearance(ButtonAppearance::Flat)
+        self.with_treatment(ButtonTreatment::Flat)
     }
 
     /// Returns this button with explicit raised styling.
     #[must_use]
     pub fn raised(self) -> Self {
-        self.with_appearance(ButtonAppearance::Raised)
+        self.with_treatment(ButtonTreatment::Raised)
     }
 
     /// Returns this button with fully rounded capsule styling.
     #[must_use]
     pub fn pill(self) -> Self {
-        self.with_appearance(ButtonAppearance::Pill)
+        self.with_shape(ButtonShape::Pill)
     }
 
     /// Returns this button with circular styling.
@@ -144,7 +181,7 @@ impl AnimatedButton {
     /// buttons.
     #[must_use]
     pub fn circular(self) -> Self {
-        self.with_appearance(ButtonAppearance::Circular)
+        self.with_shape(ButtonShape::Circular)
     }
 
     /// Returns this button with disabled state preconfigured.
@@ -322,7 +359,7 @@ mod tests {
     use float_cmp::assert_approx_eq;
 
     use crate::{
-        button::{ButtonAppearance, ButtonRole, ButtonStyleState, ButtonVariant},
+        button::{ButtonRole, ButtonStyleState, ButtonVariant},
         component::ComponentContext,
     };
 
@@ -375,29 +412,17 @@ mod tests {
             .with_role(ButtonRole::Suggested)
             .flat();
 
-        assert_eq!(
-            button.variant(),
-            ButtonVariant::SUGGESTED.with_appearance(ButtonAppearance::Flat)
-        );
+        assert_eq!(button.variant(), ButtonVariant::SUGGESTED.set_flat());
 
         let button = AnimatedButton::destructive("Delete").raised();
 
-        assert_eq!(
-            button.variant(),
-            ButtonVariant::DESTRUCTIVE.with_appearance(ButtonAppearance::Raised)
-        );
+        assert_eq!(button.variant(), ButtonVariant::DESTRUCTIVE.set_raised());
 
         let button = AnimatedButton::standard("Info").pill();
-        assert_eq!(
-            button.variant(),
-            ButtonVariant::STANDARD.with_appearance(ButtonAppearance::Pill)
-        );
+        assert_eq!(button.variant(), ButtonVariant::STANDARD.set_pill());
 
         let button = AnimatedButton::standard("i").circular();
-        assert_eq!(
-            button.variant(),
-            ButtonVariant::STANDARD.with_appearance(ButtonAppearance::Circular)
-        );
+        assert_eq!(button.variant(), ButtonVariant::STANDARD.set_circular());
     }
 
     #[test]
@@ -520,7 +545,7 @@ mod tests {
         assert_eq!(snapshot.style_state, ButtonStyleState::Pressed);
         assert_eq!(
             snapshot.style.background,
-            context.theme().theme().button.suggested.pressed.bg
+            context.theme().theme().button.suggested.filled.pressed.bg
         );
         assert_approx_eq!(f32, snapshot.motion.scale, 0.98);
     }

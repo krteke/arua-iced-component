@@ -1,8 +1,10 @@
 //! Iced integration for animated buttons.
 
-use iced::widget::{button, mouse_area, text};
+use iced::widget::{button, container, mouse_area, text};
 use iced::{Background, Border, Color, Element, Length, Shadow, Vector};
-use spectrum_theme::iced::{IcedColorAdapter, IcedRadiusAdapter, IcedShadowAdapter};
+use spectrum_theme::iced::{
+    IcedColorAdapter, IcedLengthAdapter, IcedRadiusAdapter, IcedShadowAdapter,
+};
 use std::borrow::Cow;
 
 use super::{AnimatedButton, AnimatedButtonSnapshot, ButtonEvent, ButtonInteraction};
@@ -15,8 +17,10 @@ pub struct AnimatedButtonView<'a, Message, Action = ()> {
     content: Element<'a, Message>,
     events: ButtonViewEvents<'a, Message, Action>,
     padding: [f32; 2],
+    compact_padding: [f32; 2],
     width: Option<Length>,
     height: Option<Length>,
+    center_content: bool,
 }
 
 /// Content accepted by [`AnimatedButtonView`].
@@ -130,9 +134,19 @@ impl AnimatedButton {
             snapshot: self.snapshot(runtime, context)?,
             content: ButtonContent::from(self.label()).into_element(),
             events: ButtonViewEvents::new(),
-            padding: [8.0, 14.0],
+            padding: button_padding(context),
+            compact_padding: button_compact_padding(context),
             width: None,
-            height: None,
+            height: Some(
+                context
+                    .theme()
+                    .theme()
+                    .control
+                    .button
+                    .min_height
+                    .length_px(),
+            ),
+            center_content: false,
         })
     }
 }
@@ -192,8 +206,10 @@ impl<'a, Message, Action> AnimatedButtonView<'a, Message, Action> {
             content: self.content,
             events: ButtonViewEvents::<Message, Action>::on_press(action),
             padding: self.padding,
+            compact_padding: self.compact_padding,
             width: self.width,
             height: self.height,
+            center_content: self.center_content,
         }
     }
 
@@ -209,8 +225,10 @@ impl<'a, Message, Action> AnimatedButtonView<'a, Message, Action> {
             content: self.content,
             events: ButtonViewEvents::<Message, Action>::on_press_event(action, mapper),
             padding: self.padding,
+            compact_padding: self.compact_padding,
             width: self.width,
             height: self.height,
+            center_content: self.center_content,
         }
     }
 
@@ -225,8 +243,10 @@ impl<'a, Message, Action> AnimatedButtonView<'a, Message, Action> {
             content: self.content,
             events: ButtonViewEvents::<Message, Action>::on_press_maybe(action),
             padding: self.padding,
+            compact_padding: self.compact_padding,
             width: self.width,
             height: self.height,
+            center_content: self.center_content,
         }
     }
 
@@ -239,8 +259,8 @@ impl<'a, Message, Action> AnimatedButtonView<'a, Message, Action> {
 
     /// Uses compact button padding.
     #[must_use]
-    pub const fn compact(mut self) -> Self {
-        self.padding = [4.0, 8.0];
+    pub fn compact(mut self) -> Self {
+        self.padding = self.compact_padding;
         self
     }
 
@@ -264,8 +284,22 @@ impl<'a, Message, Action> AnimatedButtonView<'a, Message, Action> {
         self.width = Some(Length::Fixed(size));
         self.height = Some(Length::Fixed(size));
         self.padding = [0.0, 0.0];
+        self.center_content = true;
         self
     }
+}
+
+fn button_padding(context: &ComponentContext) -> [f32; 2] {
+    let button = &context.theme().theme().control.button;
+    [button.padding_y.value(), button.padding_x.value()]
+}
+
+fn button_compact_padding(context: &ComponentContext) -> [f32; 2] {
+    let button = &context.theme().theme().control.button;
+    [
+        button.compact_padding_y.value(),
+        button.compact_padding_x.value(),
+    ]
 }
 
 impl<'a, Message, Action> From<AnimatedButtonView<'a, Message, Action>> for Element<'a, Message>
@@ -274,7 +308,13 @@ where
     Action: 'a,
 {
     fn from(view: AnimatedButtonView<'a, Message, Action>) -> Self {
-        let mut widget = button(view.content)
+        let content = if view.center_content {
+            container(view.content).center(Length::Fill).into()
+        } else {
+            view.content
+        };
+
+        let mut widget = button(content)
             .padding(view.padding)
             .style(move |_theme, _status| button_style(view.snapshot));
         if let Some(width) = view.width {
@@ -336,7 +376,7 @@ pub fn button_style(snapshot: AnimatedButtonSnapshot) -> button::Style {
             } else {
                 style.border.color()
             },
-            width: 1.0 + motion.border_glow,
+            width: style.border_width.value() + motion.border_glow,
             radius: style.radius.radius_px(),
         },
         shadow,
@@ -444,7 +484,7 @@ mod tests {
     fn view_builder_accepts_sizing_helpers() {
         let runtime = MotionRuntime::new();
         let context = ComponentContext::current();
-        let button = AnimatedButton::standard("i").circular();
+        let button = AnimatedButton::standard("i").circular().circular();
 
         let view = button
             .view(&runtime, &context)
@@ -454,7 +494,22 @@ mod tests {
             .square(34.0)
             .on_press(())
             .map_event(|_| ());
+        assert!(view.center_content);
         let _element: Element<'_, ()> = view.into();
+    }
+
+    #[test]
+    fn default_view_does_not_force_centered_content() {
+        #[derive(Clone)]
+        enum Message {}
+
+        let runtime = MotionRuntime::new();
+        let context = ComponentContext::current();
+        let button = AnimatedButton::standard("Save");
+
+        let view = button.view(&runtime, &context);
+        assert!(!view.center_content);
+        let _element: Element<'_, Message> = view.into();
     }
 
     #[test]

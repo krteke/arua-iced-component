@@ -1,6 +1,6 @@
 use spectrum_resolver::resolve_theme;
 use spectrum_schema::ThemeSpec;
-use spectrum_theme::{Color, Radius, ShadowLayer, define_theme_tokens};
+use spectrum_theme::{Color, Length, Radius, ShadowLayer, define_theme_tokens};
 use std::cell::RefCell;
 use std::sync::OnceLock;
 
@@ -32,48 +32,104 @@ define_theme_tokens! {
                 shadow: ShadowLayer,
             }
         }
+        control {
+            border { width: Length }
+            button {
+                padding_x: Length,
+                padding_y: Length,
+                compact_padding_x: Length,
+                compact_padding_y: Length,
+                min_height: Length,
+            }
+            icon_button {
+                size: Length,
+                compact_size: Length,
+                icon_size: Length,
+            }
+        }
         button {
+            shape {
+                rounded { radius: Radius }
+                pill { radius: Radius }
+                circular { radius: Radius }
+            }
             standard {
-                bg: Color,
-                fg: Color,
-                border: Color,
-                hover { bg: Color }
-                pressed { bg: Color }
-                disabled {
-                    bg: Color,
-                    fg: Color,
+                filled {
+                    idle { bg: Color, fg: Color, border: Color }
+                    hover { bg: Color, fg: Color, border: Color }
+                    pressed { bg: Color, fg: Color, border: Color }
+                    disabled { bg: Color, fg: Color, border: Color }
+                    focus { ring: Color }
+                    shadow: ShadowLayer
                 }
-                focus { ring: Color }
-                radius: Radius,
-                shadow: ShadowLayer,
+                flat {
+                    idle { bg: Color, fg: Color, border: Color }
+                    hover { bg: Color, fg: Color, border: Color }
+                    pressed { bg: Color, fg: Color, border: Color }
+                    disabled { bg: Color, fg: Color, border: Color }
+                    focus { ring: Color }
+                    shadow: ShadowLayer
+                }
+                raised {
+                    idle { bg: Color, fg: Color, border: Color }
+                    hover { bg: Color, fg: Color, border: Color }
+                    pressed { bg: Color, fg: Color, border: Color }
+                    disabled { bg: Color, fg: Color, border: Color }
+                    focus { ring: Color }
+                    shadow: ShadowLayer
+                }
             }
             suggested {
-                bg: Color,
-                fg: Color,
-                border: Color,
-                hover { bg: Color }
-                pressed { bg: Color }
-                disabled {
-                    bg: Color,
-                    fg: Color,
+                filled {
+                    idle { bg: Color, fg: Color, border: Color }
+                    hover { bg: Color, fg: Color, border: Color }
+                    pressed { bg: Color, fg: Color, border: Color }
+                    disabled { bg: Color, fg: Color, border: Color }
+                    focus { ring: Color }
+                    shadow: ShadowLayer
                 }
-                focus { ring: Color }
-                radius: Radius,
-                shadow: ShadowLayer,
+                flat {
+                    idle { bg: Color, fg: Color, border: Color }
+                    hover { bg: Color, fg: Color, border: Color }
+                    pressed { bg: Color, fg: Color, border: Color }
+                    disabled { bg: Color, fg: Color, border: Color }
+                    focus { ring: Color }
+                    shadow: ShadowLayer
+                }
+                raised {
+                    idle { bg: Color, fg: Color, border: Color }
+                    hover { bg: Color, fg: Color, border: Color }
+                    pressed { bg: Color, fg: Color, border: Color }
+                    disabled { bg: Color, fg: Color, border: Color }
+                    focus { ring: Color }
+                    shadow: ShadowLayer
+                }
             }
             destructive {
-                bg: Color,
-                fg: Color,
-                border: Color,
-                hover { bg: Color }
-                pressed { bg: Color }
-                disabled {
-                    bg: Color,
-                    fg: Color,
+                filled {
+                    idle { bg: Color, fg: Color, border: Color }
+                    hover { bg: Color, fg: Color, border: Color }
+                    pressed { bg: Color, fg: Color, border: Color }
+                    disabled { bg: Color, fg: Color, border: Color }
+                    focus { ring: Color }
+                    shadow: ShadowLayer
                 }
-                focus { ring: Color }
-                radius: Radius,
-                shadow: ShadowLayer,
+                flat {
+                    idle { bg: Color, fg: Color, border: Color }
+                    hover { bg: Color, fg: Color, border: Color }
+                    pressed { bg: Color, fg: Color, border: Color }
+                    disabled { bg: Color, fg: Color, border: Color }
+                    focus { ring: Color }
+                    shadow: ShadowLayer
+                }
+                raised {
+                    idle { bg: Color, fg: Color, border: Color }
+                    hover { bg: Color, fg: Color, border: Color }
+                    pressed { bg: Color, fg: Color, border: Color }
+                    disabled { bg: Color, fg: Color, border: Color }
+                    focus { ring: Color }
+                    shadow: ShadowLayer
+                }
             }
         }
     }
@@ -85,12 +141,32 @@ pub type AppTokens = ThemePackApp;
 pub type SurfaceTokens = ThemePackSurfaceBase;
 /// Raised surface token group generated for [`ThemePack`].
 pub type SurfaceRaisedTokens = ThemePackSurfaceRaised;
+/// Control metrics generated for [`ThemePack`].
+pub type ControlTokens = ThemePackControl;
 /// Standard button token group generated for [`ThemePack`].
 pub type ButtonStandardTokens = ThemePackButtonStandard;
+/// Standard filled button token group.
+pub type ButtonStandardFilledTokens = ThemePackButtonStandardFilled;
+/// Standard flat button token group.
+pub type ButtonStandardFlatTokens = ThemePackButtonStandardFlat;
+/// Standard raised button token group.
+pub type ButtonStandardRaisedTokens = ThemePackButtonStandardRaised;
 /// Suggested-action button token group generated for [`ThemePack`].
 pub type ButtonSuggestedTokens = ThemePackButtonSuggested;
+/// Suggested filled button token group.
+pub type ButtonSuggestedFilledTokens = ThemePackButtonSuggestedFilled;
+/// Suggested flat button token group.
+pub type ButtonSuggestedFlatTokens = ThemePackButtonSuggestedFlat;
+/// Suggested raised button token group.
+pub type ButtonSuggestedRaisedTokens = ThemePackButtonSuggestedRaised;
 /// Destructive-action button token group generated for [`ThemePack`].
 pub type ButtonDestructiveTokens = ThemePackButtonDestructive;
+/// Destructive filled button token group.
+pub type ButtonDestructiveFilledTokens = ThemePackButtonDestructiveFilled;
+/// Destructive flat button token group.
+pub type ButtonDestructiveFlatTokens = ThemePackButtonDestructiveFlat;
+/// Destructive raised button token group.
+pub type ButtonDestructiveRaisedTokens = ThemePackButtonDestructiveRaised;
 /// Backward-compatible alias for suggested-action button tokens.
 pub type ButtonPrimaryTokens = ButtonSuggestedTokens;
 
@@ -135,6 +211,7 @@ pub fn set_theme_pack(theme: ThemePack) {
 
 #[cfg(test)]
 mod tests {
+    use float_cmp::assert_approx_eq;
     use spectrum_theme::Color;
 
     use super::{ADWAITA_LIGHT_TOML, ThemePack, set_theme_pack, with_theme_pack};
@@ -142,7 +219,7 @@ mod tests {
     #[test]
     fn adwaita_baseline_uses_muted_blue_accent() {
         let theme = ThemePack::adwaita();
-        let accent = theme.button.suggested.bg;
+        let accent = theme.button.suggested.filled.idle.bg;
 
         assert!(accent.blue() > accent.red());
         assert!(accent.red() < 96);
@@ -161,11 +238,11 @@ mod tests {
     fn thread_local_theme_can_be_replaced() {
         let accent = Color::new(26, 95, 180);
         let mut theme = ThemePack::adwaita();
-        theme.button.suggested.bg = accent;
+        theme.button.suggested.filled.idle.bg = accent;
 
         set_theme_pack(theme);
 
-        with_theme_pack(|current| assert_eq!(current.button.suggested.bg, accent));
+        with_theme_pack(|current| assert_eq!(current.button.suggested.filled.idle.bg, accent));
         set_theme_pack(ThemePack::adwaita());
     }
 
@@ -175,12 +252,22 @@ mod tests {
 
         assert_eq!(theme.app.bg, "#f6f5f4".parse::<Color>().unwrap());
         assert_eq!(theme.surface.raised.border, theme.surface.base.border);
-        assert_eq!(theme.button.standard.bg, theme.surface.raised.bg);
-        assert_eq!(theme.button.suggested.border, theme.button.suggested.bg);
-        assert_eq!(theme.button.destructive.border, theme.button.destructive.bg);
         assert_eq!(
-            theme.button.suggested.disabled.fg,
-            theme.button.standard.disabled.fg
+            theme.button.standard.filled.idle.bg,
+            theme.surface.raised.bg
         );
+        assert_eq!(
+            theme.button.suggested.filled.idle.border,
+            theme.button.suggested.filled.idle.bg
+        );
+        assert_eq!(
+            theme.button.destructive.filled.idle.border,
+            theme.button.destructive.filled.idle.bg
+        );
+        assert_eq!(
+            theme.button.suggested.filled.disabled.fg,
+            theme.button.standard.filled.disabled.fg
+        );
+        assert_approx_eq!(f32, theme.control.icon_button.size.value(), 40.0);
     }
 }
